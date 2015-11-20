@@ -11,9 +11,10 @@ const Condition = require('five-bells-condition').Condition
 const Log = require('../lib/log')
 const DB = require('../lib/db')
 const Config = require('../lib/config')
+const NotificationWorker = require('../lib/notificationWorker')
 
-CasesControllerFactory.constitute = [CaseFactory, NotaryFactory, Log, DB, Config]
-function CasesControllerFactory (Case, Notary, log, db, config) {
+CasesControllerFactory.constitute = [CaseFactory, NotaryFactory, Log, DB, Config, NotificationWorker]
+function CasesControllerFactory (Case, Notary, log, db, config, notificationWorker) {
   log = log('cases')
 
   return class CasesController {
@@ -125,6 +126,11 @@ function CasesControllerFactory (Case, Notary, log, db, config) {
 
       this.body = caseInstance.getDataExternal()
       this.status = 200
+
+      yield db.transaction(function *(transaction) {
+        yield caseInstance.save({ transaction })
+        yield notificationWorker.queueNotifications(caseInstance, transaction)
+      })
     }
   }
 }

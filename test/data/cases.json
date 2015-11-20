@@ -37,5 +37,20 @@
       "http://localhost"
     ],
     "transfers": []
+  },
+  "notification": {
+    "id": "http://localhost/cases/66abf362-4aff-4982-9a5a-fb497b21594a",
+    "state": "proposed",
+    "execution_condition": {
+      "type": "sha256",
+      "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
+    },
+    "expires_at": "3015-11-20T08:52:40.000Z",
+    "notaries": [
+      "http://localhost"
+    ],
+    "transfers": [
+      "http://ledger.example/transfers/123"
+    ]
   }
 }

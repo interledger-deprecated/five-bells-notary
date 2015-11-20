@@ -1,11 +1,14 @@
 'use strict'
 
 const _ = require('lodash')
+const nock = require('nock')
+const expect = require('chai').expect
 const Log = require('../src/lib/log')
 const DB = require('../src/lib/db')
 const CaseFactory = require('../src/models/case')
 const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
+const NotificationWorker = require('../src/lib/notificationWorker')
 
 const Container = require('constitute').Container
 const container = new Container()
@@ -13,6 +16,7 @@ const container = new Container()
 describe('Cases', function () {
   const logger = container.constitute(Log)
   const db = container.constitute(DB)
+  const notificationWorker = container.constitute(NotificationWorker)
   const Case = container.constitute(CaseFactory)
   logHelper(logger)
 
@@ -141,6 +145,49 @@ describe('Cases', function () {
           message: 'Invalid execution_condition_fulfillment'
         })
         .end()
+    })
+
+    it('should notify transfers when fulfilling a case', function *() {
+      const exampleCase = this.cases.notification
+
+      yield this.request()
+        .put(exampleCase.id + '/fulfillment')
+        .send(this.exampleFulfillment)
+        .expect(200)
+        .end()
+
+      const getNotification = nock('http://ledger.example')
+        .log(logger('nock').info)
+        .get('/transfers/123')
+        .reply(200, {
+          id: 'http://ledger.example/transfers/123'
+        })
+
+      const putNotification = nock('http://ledger.example')
+        .log(logger('nock').info)
+        .put('/transfers/123', (body) => {
+          // TODO Verify signature
+          const caseFulfillment = body.execution_condition_fulfillment.subfulfillments[0]
+          caseFulfillment.signature = ''
+
+          expect(body).to.deep.equal({
+            id: 'http://ledger.example/transfers/123',
+            execution_condition_fulfillment: {
+              type: 'and',
+              subfulfillments: [{
+                type: 'ed25519-sha512',
+                signature: ''
+              }, this.exampleFulfillment]
+            }
+          })
+          return true
+        })
+        .reply(204)
+
+      yield notificationWorker.processNotificationQueue()
+
+      getNotification.done()
+      putNotification.done()
     })
   })
 })
