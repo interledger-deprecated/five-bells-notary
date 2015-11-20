@@ -25,7 +25,7 @@
     "co-map": "^1.1.0",
     "constitute": "^1.2.0",
     "five-bells-condition": "^2.0.0",
-    "five-bells-shared": "^8.0.1",
+    "five-bells-shared": "^8.3.0",
     "koa": "^1.0.0",
     "koa-mag": "^1.1.0",
     "koa-router": "^5.1.2",
