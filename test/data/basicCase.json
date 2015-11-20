@@ -1,0 +1,12 @@
+{
+  "id": "http://localhost/cases/75159fb1-8ed2-4c92-9af7-0f48e2616f47",
+  "execution_condition": {
+    "type": "sha256",
+    "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
+  },
+  "expires_at": "2015-11-19T20:27:12.299Z",
+  "notaries": [{
+    "url": "http://localhost"
+  }],
+  "transfers": ["https://localhost:3001/transfers/123"]
+}

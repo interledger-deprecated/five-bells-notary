@@ -1,5 +1,5 @@
-# Five Bells Witness
-> Consensus-capable Byzantine fault tolerant cryptographic witness
+# Five Bells Notary
+> Consensus-capable Byzantine fault tolerant cryptographic notary
 
 ## What does this do?
 

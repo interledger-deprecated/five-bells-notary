@@ -1,0 +1,49 @@
+  {
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "title": "Case",
+  "description": "A specific binary decision to be notarized",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique ID",
+      "$ref": "Iri.json"
+    },
+    "execution_condition": {
+      "description": "Cryptographic condition",
+      "$ref": "Condition.json"
+    },
+    "expires_at": {
+      "description": "The date when the case expires and will be rejected by the notary",
+      "$ref": "Date.json"
+    },
+    "notaries": {
+      "description": "Notaries (including this one) which are participating in this case",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "$ref": "Iri.json"
+          }
+        },
+        "required": ["url"],
+        "additionalProperies": false
+      }
+    },
+    "transfers": {
+      "description": "URIs of transfers that are related to this case - in the future this feature should be replaced by a generic crypto-event subscription system",
+      "type": "array",
+      "items": {
+        "$ref": "Iri.json"
+      }
+    },
+    "state": {
+      "description": "All cases start in the proposed state and are either executed or rejected",
+      "type": {
+        "enum": ["proposed", "executed", "rejected"]
+      }
+    }
+  },
+  "required": ["execution_condition", "expires_at", "notaries", "transfers"],
+  "additionalProperties": false
+}
