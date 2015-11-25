@@ -1,4 +1,4 @@
-module.exports = function (wallaby) {
+module.exports = function () {
   return {
     files: [
       'src/**/*.js',
@@ -23,9 +23,8 @@ module.exports = function (wallaby) {
       }
     },
 
-    bootstrap: function () {
-      var path = require('path')
-      require('co-mocha')(require(path.join(path.dirname(process.argv[1]), 'runners/node/mocha@2.1.0/framework/')))
+    bootstrap: function (wallaby) {
+      require('co-mocha')(wallaby.testFramework.constructor)
     }
   }
 }
