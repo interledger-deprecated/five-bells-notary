@@ -12,9 +12,10 @@ const Log = require('../lib/log')
 const DB = require('../lib/db')
 const Config = require('../lib/config')
 const NotificationWorker = require('../lib/notificationWorker')
+const CaseExpiryMonitor = require('../lib/caseExpiryMonitor')
 
-CasesControllerFactory.constitute = [CaseFactory, NotaryFactory, Log, DB, Config, NotificationWorker]
-function CasesControllerFactory (Case, Notary, log, db, config, notificationWorker) {
+CasesControllerFactory.constitute = [CaseFactory, NotaryFactory, Log, DB, Config, NotificationWorker, CaseExpiryMonitor]
+function CasesControllerFactory (Case, Notary, log, db, config, notificationWorker, caseExpiryMonitor) {
   log = log('cases')
 
   return class CasesController {
@@ -77,17 +78,18 @@ function CasesControllerFactory (Case, Notary, log, db, config, notificationWork
         throw new UnprocessableEntityError(`The notary in the case must match this notary (expected: "${config.server.base_uri}", actual: "${caseInstance.notaries[0].url}")`)
       }
 
-      let created
       yield db.transaction(co.wrap(function * (transaction) {
         // const notaries = yield Notary.bulkCreate(caseInstance.notaries, { transaction })
-        created = yield Case.create(caseInstance, { transaction })
+        yield Case.create(caseInstance, { transaction })
         // yield caseInstance.getDatabaseModel().addNotaries(notaries, { transaction })
       }))
 
-      log.debug((created ? 'created' : 'updated') + ' case ID ' + id)
+      log.debug('created case ID ' + id)
+
+      yield caseExpiryMonitor.watch(caseInstance)
 
       this.body = caseInstance.getDataExternal()
-      this.status = created ? 201 : 200
+      this.status = 201
     }
 
     /**
