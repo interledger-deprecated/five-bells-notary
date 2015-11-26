@@ -23,6 +23,7 @@
   "dependencies": {
     "co": "^4.6.0",
     "co-defer": "^1.0.0",
+    "co-emitter": "^0.2.3",
     "co-map": "^1.1.0",
     "co-request": "^1.0.0",
     "constitute": "^1.2.0",
@@ -34,7 +35,9 @@
     "lodash": "^3.10.1",
     "mag": "^0.9.1",
     "mag-hub": "^0.1.1",
+    "moment": "^2.10.6",
     "mysql": "^2.9.0",
+    "priorityqueuejs": "^1.0.0",
     "sequelize": "^3.7.1",
     "tweetnacl": "^0.13.2"
   },
