@@ -15,7 +15,3 @@ Of course, now the transactional semantics depend on safety and liveness of the 
 npm install
 npm start
 ```
-
-## API Documentation
-
-[docs/API.md](docs/API.md)
