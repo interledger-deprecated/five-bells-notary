@@ -3,6 +3,7 @@
 const _ = require('lodash')
 const nock = require('nock')
 const expect = require('chai').expect
+const sinon = require('sinon')
 const Log = require('../src/lib/log')
 const DB = require('../src/lib/db')
 const CaseFactory = require('../src/models/case')
@@ -12,6 +13,8 @@ const NotificationWorker = require('../src/lib/notificationWorker')
 
 const Container = require('constitute').Container
 const container = new Container()
+
+const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
 describe('Cases', function () {
   const logger = container.constitute(Log)
@@ -25,6 +28,8 @@ describe('Cases', function () {
 
     yield db.dropAllSchemas()
     yield db.sync()
+
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
     this.cases = _.cloneDeep(require('./data/cases'))
     yield Case.bulkCreateExternal(_.values(this.cases))
@@ -188,6 +193,72 @@ describe('Cases', function () {
 
       getNotification.done()
       putNotification.done()
+    })
+
+    it('should retry failed notifications when fulfilling a case', function *() {
+      const exampleCase = this.cases[1]
+
+      yield this.request()
+        .put(exampleCase.id + '/fulfillment')
+        .send(this.exampleFulfillment)
+        .expect(200)
+        .end()
+
+      const getNotification1 = nock('http://ledger.example')
+        .log(logger('nock').info)
+        .get('/transfers/123')
+        .reply(500)
+      const getNotification2 = nock('http://ledger.example')
+        .log(logger('nock').info)
+        .get('/transfers/123')
+        .times(2)
+        .reply(200, { id: 'http://ledger.example/transfers/123' })
+
+      const putNotification1 = nock('http://ledger.example')
+        .put('/transfers/123')
+        .reply(500)
+      const putNotification2 = nock('http://ledger.example')
+        .log(logger('nock').info)
+        .put('/transfers/123', (body) => {
+          // TODO Verify signature
+          const caseFulfillment = body.execution_condition_fulfillment.subfulfillments[0]
+          caseFulfillment.signature = ''
+
+          expect(body).to.deep.equal({
+            id: 'http://ledger.example/transfers/123',
+            execution_condition_fulfillment: {
+              type: 'and',
+              subfulfillments: [{
+                type: 'ed25519-sha512',
+                signature: ''
+              }, this.exampleFulfillment]
+            }
+          })
+          return true
+        })
+        .reply(204)
+
+      // GET fails
+      yield notificationWorker.processNotificationQueue()
+      getNotification1.done()
+      expect(putNotification1.isDone()).to.equal(false)
+      this.clock.tick(500)
+
+      // Not ready to retry yet (backoff in effect)
+      yield notificationWorker.processNotificationQueue()
+      expect(putNotification1.isDone()).to.equal(false)
+      this.clock.tick(1501)
+
+      // PUT fails
+      yield notificationWorker.processNotificationQueue()
+      putNotification1.done()
+      expect(putNotification2.isDone()).to.equal(false)
+      this.clock.tick(4001)
+
+      // Success
+      yield notificationWorker.processNotificationQueue()
+      getNotification2.done()
+      putNotification2.done()
     })
   })
 })
