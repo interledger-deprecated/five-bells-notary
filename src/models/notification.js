@@ -21,12 +21,17 @@ function NotificationFactory (container, sequelize, Case) {
 
   PersistentModelMixin(Notification, sequelize, {
     case_id: Sequelize.UUID,
-    transfer: Sequelize.TEXT
+    transfer: Sequelize.TEXT,
+    retry_count: Sequelize.INTEGER,
+    retry_at: Sequelize.DATE
   }, {
-    indexes: [{
-      unique: true,
-      fields: ['case_id']
-    }]
+    indexes: [
+      {
+        unique: true,
+        fields: ['case_id']
+      },
+      { fields: ['retry_at'] }
+    ]
   })
 
   Notification.DbModel.belongsTo(Case.DbModel)
