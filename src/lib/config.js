@@ -7,6 +7,7 @@ module.exports = class NotaryConfig extends Config {
     super('notary')
     this.parseServerConfig()
     this.parseDatabaseConfig()
+    this.parseKeyConfig()
 
     if (process.env.NODE_ENV === 'unit') {
       this.server.public_host = 'localhost'
