@@ -112,7 +112,7 @@ function CasesControllerFactory (Case, Notary, log, db, config) {
         this.body = caseInstance.getDataExternal()
         this.status = 200
         return
-      } else if (caseInstance.state === 'rejected' || caseInstance.expires_at.getTime() < new Date().getTime()) {
+      } else if (caseInstance.state === 'rejected' || caseInstance.expires_at.getTime() < Date.now()) {
         throw new UnprocessableEntityError('Case ' + id + ' is already rejected')
       } else if (!Condition.testFulfillment(caseInstance.execution_condition, fulfillment)) {
         console.log('condition', caseInstance.execution_condition)

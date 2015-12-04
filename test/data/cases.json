@@ -1,13 +1,41 @@
-[{
-  "id": "http://localhost/cases/ba18fbe6-a520-40bd-b5ac-02c9ccebbbdb",
-  "state": "proposed",
-  "execution_condition": {
-    "type": "sha256",
-    "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
+{
+  "simple": {
+    "id": "http://localhost/cases/ba18fbe6-a520-40bd-b5ac-02c9ccebbbdb",
+    "state": "proposed",
+    "execution_condition": {
+      "type": "sha256",
+      "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
+    },
+    "expires_at": "3015-11-20T08:52:40.000Z",
+    "notaries": [
+      "http://localhost"
+    ],
+    "transfers": []
   },
-  "expires_at": "3015-11-20T08:52:40.000Z",
-  "notaries": [
-    "http://localhost"
-  ],
-  "transfers": []
-}]
+  "rejected": {
+    "id": "http://localhost/cases/ba18fbe6-a520-40bd-b5ac-02c9ccebbbdc",
+    "state": "rejected",
+    "execution_condition": {
+      "type": "sha256",
+      "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
+    },
+    "expires_at": "3015-11-20T08:52:40.000Z",
+    "notaries": [
+      "http://localhost"
+    ],
+    "transfers": []
+  },
+  "expired": {
+    "id": "http://localhost/cases/ba18fbe6-a520-40bd-b5ac-02c9ccebbbdd",
+    "state": "proposed",
+    "execution_condition": {
+      "type": "sha256",
+      "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
+    },
+    "expires_at": "2015-12-01T18:40:00.494Z",
+    "notaries": [
+      "http://localhost"
+    ],
+    "transfers": []
+  }
+}
