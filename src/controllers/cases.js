@@ -116,8 +116,6 @@ function CasesControllerFactory (Case, Notary, log, db, config, notificationWork
       } else if (caseInstance.state === 'rejected' || caseInstance.expires_at.getTime() < Date.now()) {
         throw new UnprocessableEntityError('Case ' + id + ' is already rejected')
       } else if (!Condition.testFulfillment(caseInstance.execution_condition, fulfillment)) {
-        console.log('condition', caseInstance.execution_condition)
-        console.log('fulfillment', fulfillment)
         throw new UnmetConditionError('Invalid execution_condition_fulfillment')
       }
 
