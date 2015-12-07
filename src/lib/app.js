@@ -9,15 +9,17 @@ const Config = require('./config')
 const Router = require('./router')
 const DB = require('./db')
 const Log = require('./log')
+const NotificationWorker = require('./notificationWorker')
 
 module.exports = class App {
-  static constitute () { return [ Config, Router, Validator, DB, Log ] }
-  constructor (config, router, validator, db, log) {
+  static constitute () { return [ Config, Router, Validator, DB, Log, NotificationWorker ] }
+  constructor (config, router, validator, db, log, notificationWorker) {
     this.config = config
     this.router = router
     this.validator = validator
     this.db = db
     this.log = log('app')
+    this.notificationWorker = notificationWorker
 
     validator.loadSharedSchemas()
     validator.loadSchemasFromDirectory(__dirname + '/../../schemas')
@@ -39,6 +41,7 @@ module.exports = class App {
 
   * _start () {
     yield this.db.sync()
+    yield this.notificationWorker.start()
     this.listen()
   }
 
