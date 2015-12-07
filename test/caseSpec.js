@@ -10,6 +10,7 @@ const CaseFactory = require('../src/models/case')
 const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const NotificationWorker = require('../src/lib/notificationWorker')
+const TimerWorker = require('../src/lib/timerWorker')
 
 const Container = require('constitute').Container
 const container = new Container()
@@ -20,6 +21,7 @@ describe('Cases', function () {
   const logger = container.constitute(Log)
   const db = container.constitute(DB)
   const notificationWorker = container.constitute(NotificationWorker)
+  const timerWorker = container.constitute(TimerWorker)
   const Case = container.constitute(CaseFactory)
   logHelper(logger)
 
@@ -126,8 +128,8 @@ describe('Cases', function () {
         .send(this.exampleFulfillment)
         .expect(422)
         .expect({
-          id: 'UnprocessableEntityError',
-          message: 'Case ba18fbe6-a520-40bd-b5ac-02c9ccebbbdd is already rejected'
+          id: 'ExpiredCaseError',
+          message: 'Cannot modify case after expires_at date'
         })
         .end()
     })
@@ -196,7 +198,7 @@ describe('Cases', function () {
     })
 
     it('should retry failed notifications when fulfilling a case', function *() {
-      const exampleCase = this.cases[1]
+      const exampleCase = this.cases.other
 
       yield this.request()
         .put(exampleCase.id + '/fulfillment')
@@ -259,6 +261,44 @@ describe('Cases', function () {
       yield notificationWorker.processNotificationQueue()
       getNotification2.done()
       putNotification2.done()
+    })
+  })
+
+  describe('case notifications', function () {
+    it('notifies on case expiration', function *() {
+      const exampleCase = this.basicCase
+      exampleCase.id = 'http://localhost/cases/75159fb1-8ed2-4c92-9af7-0f48e2616f48'
+      exampleCase.expires_at = (new Date(Date.now() + 1000)).toISOString()
+      exampleCase.transfers = ['http://ledger.example/transfers/123']
+      yield this.request()
+        .put(exampleCase.id)
+        .send(exampleCase)
+        .expect(201)
+        .end()
+
+      const getNotification = nock('http://ledger.example')
+        .get('/transfers/123')
+        .reply(200, { id: 'http://ledger.example/transfers/123' })
+      const putNotification = nock('http://ledger.example')
+        .put('/transfers/123', function (body) {
+          expect(body.cancellation_condition_fulfillment.type).to.equal('ed25519-sha512')
+          expect(body.cancellation_condition_fulfillment.signature).to.be.a('string')
+          return true
+        })
+        .reply(200)
+
+      // Not done yet
+      this.clock.tick(500)
+      yield timerWorker.processTimeQueue()
+      yield notificationWorker.processNotificationQueue()
+      expect(getNotification.isDone()).to.equal(false)
+
+      this.clock.tick(501)
+      yield timerWorker.processTimeQueue()
+      yield notificationWorker.processNotificationQueue()
+
+      getNotification.done()
+      putNotification.done()
     })
   })
 })

@@ -115,9 +115,13 @@ function CasesControllerFactory (Case, Notary, log, db, config, notificationWork
         this.body = caseInstance.getDataExternal()
         this.status = 200
         return
-      } else if (caseInstance.state === 'rejected' || caseInstance.expires_at.getTime() < Date.now()) {
+      }
+      if (caseInstance.state === 'rejected') {
         throw new UnprocessableEntityError('Case ' + id + ' is already rejected')
-      } else if (!Condition.testFulfillment(caseInstance.execution_condition, fulfillment)) {
+      }
+      caseExpiryMonitor.validateNotExpired(caseInstance)
+
+      if (!Condition.testFulfillment(caseInstance.execution_condition, fulfillment)) {
         throw new UnmetConditionError('Invalid execution_condition_fulfillment')
       }
 

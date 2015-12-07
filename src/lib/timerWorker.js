@@ -28,26 +28,28 @@ class TimerWorker {
     }
     _this.timeQueue.on('insert', _this.listener)
 
-    yield this.processTimeQueue()
+    this.processTimeQueueSoon()
   }
 
   * processTimeQueue () {
-    const _this = this
-
     // Process expired transfers
     yield this.caseExpiryMonitor.processExpiredCases()
 
     // Set the timer to the earliest date on the timeQueue
     if (this.timeout) {
       clearTimeout(this.timeout)
+      this.processTimeQueueSoon()
     }
+  }
+
+  processTimeQueueSoon () {
+    const _this = this
     const earliestDate = this.timeQueue.getEarliestDate()
 
     // Don't reschedule the timer if nothing is waiting
     if (!earliestDate) {
       return
     }
-
     this.log.debug('next expiration at ' + earliestDate)
 
     // If we set the timeout to greater than the MAX_32INT it
