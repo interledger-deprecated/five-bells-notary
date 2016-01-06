@@ -41,7 +41,7 @@ function CasesControllerFactory (Case, Notary, log, db, config, notificationWork
       request.validateUriParameter('id', id, 'Uuid')
       id = id.toLowerCase()
 
-      const item = yield Case.findById(this.params.id, { include: [ Notary.DbModel ] })
+      const item = yield Case.findById(id, { include: [ Notary.DbModel ] })
 
       if (!item) {
         this.status = 404
