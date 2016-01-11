@@ -1,5 +1,6 @@
 'use strict'
 
+const crypto = require('crypto')
 const defer = require('co-defer')
 const request = require('co-request')
 const tweetnacl = require('tweetnacl')
@@ -66,10 +67,11 @@ class NotificationWorker {
         ]
       }
     })
-    this.log.debug('processing ' + notifications.length + ' notifications')
-    yield notifications.map(this.processNotification.bind(this))
-
-    if (this._timeout && notifications.length) {
+    if (notifications.length) {
+      this.log.debug('processing ' + notifications.length + ' notifications')
+      yield notifications.map(this.processNotification.bind(this))
+    }
+    if (this._timeout) {
       clearTimeout(this._timeout)
       this._timeout = defer.setTimeout(this.processNotificationQueue.bind(this), this.processingInterval)
     }
@@ -82,7 +84,7 @@ class NotificationWorker {
 
   * processNotificationWithInstance (notification, caseInstance) {
     this.log.debug('notifying transfer ' + notification.transfer + ' about result: ' + caseInstance.state)
-    var retry = true
+    let retry = true
     try {
       const transferResult = yield request(notification.transfer, {
         method: 'get',
@@ -94,13 +96,14 @@ class NotificationWorker {
       const transfer = transferResult.body
 
       const stateAttestation = 'urn:notary:' + caseInstance.getDataExternal().id + ':' + caseInstance.state
+      const stateHash = sha512(stateAttestation)
       this.log.info('attesting state ' + stateAttestation)
 
       // Generate crypto condition fulfillment for case state
       const stateAttestationSigned = {
         type: 'ed25519-sha512',
         signature: tweetnacl.util.encodeBase64(tweetnacl.sign.detached(
-          tweetnacl.util.decodeUTF8(stateAttestation),
+          tweetnacl.util.decodeBase64(stateHash),
           tweetnacl.util.decodeBase64(this.config.keys.ed25519.secret)
         ))
       }
@@ -151,6 +154,10 @@ class NotificationWorker {
       this._timeout = null
     }
   }
+}
+
+function sha512 (str) {
+  return crypto.createHash('sha512').update(str).digest('base64')
 }
 
 module.exports = NotificationWorker

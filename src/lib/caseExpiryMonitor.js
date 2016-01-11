@@ -54,7 +54,7 @@ class CaseExpiryMonitor {
   }
 
   * watch (caseInstance) {
-    // Star the expiry countdown if we're not already watching it
+    // Start the expiry countdown if we're not already watching it
     if (!this.queue.includes(caseInstance.id)) {
       const now = moment()
       const expiry = moment(caseInstance.expires_at)

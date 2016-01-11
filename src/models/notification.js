@@ -26,10 +26,7 @@ function NotificationFactory (container, sequelize, Case) {
     retry_at: Sequelize.DATE
   }, {
     indexes: [
-      {
-        unique: true,
-        fields: ['case_id']
-      },
+      { fields: ['case_id'] },
       { fields: ['retry_at'] }
     ]
   })
