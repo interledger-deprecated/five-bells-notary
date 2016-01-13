@@ -13,5 +13,5 @@ Of course, now the transactional semantics depend on safety and liveness of the 
 
 ```
 npm install
-npm start
+NOTARY_DB_URI='sqlite://' npm start
 ```
