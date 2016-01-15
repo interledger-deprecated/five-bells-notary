@@ -58,7 +58,14 @@ class NotificationWorker {
   }
 
   * processNotificationQueue () {
-    const notifications = yield this.Notification.findAll()
+    const notifications = yield this.Notification.findAll({
+      where: {
+        $or: [
+          { retry_at: null },
+          { retry_at: {lt: new Date()} }
+        ]
+      }
+    })
     this.log.debug('processing ' + notifications.length + ' notifications')
     yield notifications.map(this.processNotification.bind(this))
 
@@ -75,6 +82,7 @@ class NotificationWorker {
 
   * processNotificationWithInstance (notification, caseInstance) {
     this.log.debug('notifying transfer ' + notification.transfer + ' about result: ' + caseInstance.state)
+    var retry = true
     try {
       const transferResult = yield request(notification.transfer, {
         method: 'get',
@@ -108,6 +116,7 @@ class NotificationWorker {
       } else if (caseInstance.state === 'rejected') {
         transfer.cancellation_condition_fulfillment = stateAttestationSigned
       } else {
+        retry = false
         throw new Error('Tried to send notification for a case that is not yet finalized')
       }
 
@@ -117,14 +126,23 @@ class NotificationWorker {
         body: transfer
       })
       if (result.statusCode >= 400) {
-        this.log.debug('remote error for notification ' + result.statusCode,
-          result.body)
         this.log.debug(transfer)
+        throw new Error('Remote error for notification ' + result.statusCode,
+          result.body)
       }
+      retry = false
     } catch (err) {
       this.log.debug('notification send failed ' + err)
     }
-    yield notification.destroy()
+
+    if (retry) {
+      let retries = notification.retry_count = (notification.retry_count || 0) + 1
+      let delay = Math.min(120, Math.pow(2, retries))
+      notification.retry_at = new Date(Date.now() + 1000 * delay)
+      yield notification.save()
+    } else {
+      yield notification.destroy()
+    }
   }
 
   stop () {
