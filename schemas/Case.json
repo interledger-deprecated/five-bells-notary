@@ -39,9 +39,7 @@
     },
     "state": {
       "description": "All cases start in the proposed state and are either executed or rejected",
-      "type": {
-        "enum": ["proposed", "executed", "rejected"]
-      }
+      "enum": ["proposed", "executed", "rejected"]
     }
   },
   "required": ["execution_condition", "expires_at", "notaries", "transfers"],
