@@ -1,6 +1,6 @@
 {
   "name": "five-bells-notary",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Consensus-capable Byzantine fault tolerant cryptographic notary",
   "repository": {
     "type": "git",
