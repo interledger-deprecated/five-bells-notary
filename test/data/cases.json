@@ -10,7 +10,7 @@
     "notaries": [
       "http://localhost"
     ],
-    "actions": []
+    "completion_targets": []
   },
   "other": {
     "id": "http://localhost/cases/66abf362-4aff-4982-9a5a-fb497b21594e",
@@ -23,7 +23,7 @@
     "notaries": [
       "http://localhost"
     ],
-    "actions": [
+    "completion_targets": [
       "http://ledger.example/transfers/123/fulfillment"
     ]
   },
@@ -38,7 +38,7 @@
     "notaries": [
       "http://localhost"
     ],
-    "actions": []
+    "completion_targets": []
   },
   "expired": {
     "id": "http://localhost/cases/ba18fbe6-a520-40bd-b5ac-02c9ccebbbdd",
@@ -51,7 +51,7 @@
     "notaries": [
       "http://localhost"
     ],
-    "actions": []
+    "completion_targets": []
   },
   "notification": {
     "id": "http://localhost/cases/66abf362-4aff-4982-9a5a-fb497b21594a",
@@ -64,7 +64,7 @@
     "notaries": [
       "http://localhost"
     ],
-    "actions": [
+    "completion_targets": [
       "http://ledger.example/transfers/123/fulfillment"
     ]
   }

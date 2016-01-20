@@ -32,10 +32,10 @@ class NotificationWorker {
 
   * queueNotifications (caseInstance, transaction) {
     this.log.debug('queueing notifications for case ' + caseInstance.id)
-    const notifications = yield caseInstance.actions.map((action) => {
+    const notifications = yield caseInstance.completion_targets.map((completion_target) => {
       return this.Notification.fromDatabaseModel(this.Notification.build({
         case_id: caseInstance.id,
-        action
+        completion_target
       }, { transaction }))
     })
 
@@ -83,7 +83,7 @@ class NotificationWorker {
   }
 
   * processNotificationWithInstance (notification, caseInstance) {
-    this.log.debug('notifying action ' + notification.action +
+    this.log.debug('notifying completion_target ' + notification.completion_target +
                    ' about result: ' + caseInstance.state)
     let retry = true
     try {
@@ -117,7 +117,7 @@ class NotificationWorker {
         throw new Error('Tried to send notification for a case that is not yet finalized')
       }
 
-      const result = yield request(notification.action, {
+      const result = yield request(notification.completion_target, {
         method: 'put',
         json: true,
         body: action

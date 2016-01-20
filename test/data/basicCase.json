@@ -8,5 +8,5 @@
   "notaries": [{
     "url": "http://localhost"
   }],
-  "actions": ["https://localhost:3001/transfers/123"]
+  "completion_targets": ["https://localhost:3001/transfers/123"]
 }

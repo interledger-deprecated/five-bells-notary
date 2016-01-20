@@ -154,7 +154,7 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should notify actions when fulfilling a case', function *() {
+    it('should notify completion_targets when fulfilling a case', function *() {
       const exampleCase = this.cases.notification
 
       yield this.request()
@@ -242,7 +242,7 @@ describe('Cases', function () {
       const exampleCase = this.basicCase
       exampleCase.id = 'http://localhost/cases/75159fb1-8ed2-4c92-9af7-0f48e2616f48'
       exampleCase.expires_at = (new Date(Date.now() + 1000)).toISOString()
-      exampleCase.actions = ['http://ledger.example/transfers/123/fulfillment']
+      exampleCase.completion_targets = ['http://ledger.example/transfers/123/fulfillment']
       yield this.request()
         .put(exampleCase.id)
         .send(exampleCase)
