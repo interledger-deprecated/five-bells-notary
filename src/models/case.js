@@ -43,7 +43,7 @@ function CaseFactory (sequelize, uri, validator, container, config) {
       if (data.execution_condition_fulfillment) {
         data.execution_condition_fulfillment = JSON.parse(data.execution_condition_fulfillment)
       }
-      data.actions = JSON.parse(data.actions);
+      data.actions = JSON.parse(data.actions)
       delete data.created_at
       delete data.updated_at
       return data
@@ -52,7 +52,7 @@ function CaseFactory (sequelize, uri, validator, container, config) {
     static convertToPersistent (data) {
       data.execution_condition = JSON.stringify(data.execution_condition)
       data.execution_condition_fulfillment = JSON.stringify(data.execution_condition_fulfillment)
-      data.actions = JSON.stringify(data.actions);
+      data.actions = JSON.stringify(data.actions)
       return data
     }
   }

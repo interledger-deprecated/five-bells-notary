@@ -84,10 +84,10 @@ class NotificationWorker {
 
   * processNotificationWithInstance (notification, caseInstance) {
     this.log.debug('notifying action ' + notification.action +
-                   ' about result: ' + caseInstance.state);
-    let retry = true;
+                   ' about result: ' + caseInstance.state)
+    let retry = true
     try {
-      const action = {};
+      const action = {}
 
       const stateAttestation = 'urn:notary:' + caseInstance.getDataExternal().id + ':' + caseInstance.state
       const stateHash = sha512(stateAttestation)
@@ -111,7 +111,7 @@ class NotificationWorker {
           ]
         }
       } else if (caseInstance.state === 'rejected') {
-        action.cancellation_condition_fulfillment = stateAttestationSigned;
+        action.cancellation_condition_fulfillment = stateAttestationSigned
       } else {
         retry = false
         throw new Error('Tried to send notification for a case that is not yet finalized')
@@ -121,7 +121,7 @@ class NotificationWorker {
         method: 'put',
         json: true,
         body: action
-      });
+      })
       if (result.statusCode >= 400) {
         this.log.debug(action)
         throw new Error('Remote error for notification ' + result.statusCode,
