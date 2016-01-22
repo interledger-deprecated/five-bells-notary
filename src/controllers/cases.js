@@ -13,6 +13,7 @@ const DB = require('../lib/db')
 const Config = require('../lib/config')
 const NotificationWorker = require('../lib/notificationWorker')
 const CaseExpiryMonitor = require('../lib/caseExpiryMonitor')
+const BSCase = require('../models/bscase');
 
 CasesControllerFactory.constitute = [CaseFactory, NotaryFactory, Log, DB, Config, NotificationWorker, CaseExpiryMonitor]
 function CasesControllerFactory (Case, Notary, log, db, config, notificationWorker, caseExpiryMonitor) {
@@ -66,6 +67,8 @@ function CasesControllerFactory (Case, Notary, log, db, config, notificationWork
      */
     static * putResource () {
       let id = this.params.id
+
+     
       request.validateUriParameter('id', id, 'Uuid')
       id = id.toLowerCase()
       const caseInstance = this.body
@@ -85,6 +88,15 @@ function CasesControllerFactory (Case, Notary, log, db, config, notificationWork
       }))
 
       log.debug('created case ID ' + id)
+      //co (function *() {
+      yield BSCase.forge({
+          'uuid': "abcd3",
+          'state': "Hello3"
+        }).save().then(function(model) {
+          console.log('Returned model');
+        });
+        console.log('Returned');
+    //});
 
       yield caseExpiryMonitor.watch(caseInstance)
 

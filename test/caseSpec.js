@@ -23,7 +23,7 @@ describe('Cases', function () {
   const notificationWorker = container.constitute(NotificationWorker)
   const timerWorker = container.constitute(TimerWorker)
   const Case = container.constitute(CaseFactory)
-  logHelper(logger)
+  // logHelper(logger)
 
   beforeEach(function *() {
     appHelper.create(this, container)
@@ -58,7 +58,7 @@ describe('Cases', function () {
   })
 
   describe('PUT /cases/:id', function () {
-    it('should return 201 when creating a case', function *() {
+    it.only('should return 201 when creating a case', function *() {
       yield this.request()
         .put(this.basicCase.id)
         .send(this.basicCase)

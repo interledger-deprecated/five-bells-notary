@@ -11,6 +11,15 @@ const DB = require('./db')
 const Log = require('./log')
 const NotificationWorker = require('./notificationWorker')
 const TimerWorker = require('./timerWorker')
+// testing Knex
+var knex = require('knex')({
+  'client': 'sqlite3',
+  'debug': false,
+  'connection': {
+    filename: 'sqlite.db'
+  }
+})
+const BSCase = '../models/bsCase';
 
 module.exports = class App {
   static constitute () { return [ Config, Router, Validator, DB, Log, NotificationWorker, TimerWorker ] }
