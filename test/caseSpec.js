@@ -154,7 +154,7 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should notify completion_targets when fulfilling a case', function *() {
+    it('should notify notification_targets when fulfilling a case', function *() {
       const exampleCase = this.cases.notification
 
       yield this.request()
@@ -167,17 +167,15 @@ describe('Cases', function () {
         .log(logger('nock').info)
         .put('/transfers/123/fulfillment', (body) => {
           // TODO Verify signature
-          const caseFulfillment = body.execution_condition_fulfillment.subfulfillments[0]
+          const caseFulfillment = body.subfulfillments[0]
           caseFulfillment.signature = ''
 
           expect(body).to.deep.equal({
-            execution_condition_fulfillment: {
-              type: 'and',
-              subfulfillments: [{
-                type: 'ed25519-sha512',
-                signature: ''
-              }, this.exampleFulfillment]
-            }
+            type: 'and',
+            subfulfillments: [{
+              type: 'ed25519-sha512',
+              signature: ''
+            }, this.exampleFulfillment]
           })
           return true
         })
@@ -204,17 +202,15 @@ describe('Cases', function () {
         .log(logger('nock').info)
         .put('/transfers/123/fulfillment', (body) => {
           // TODO Verify signature
-          const caseFulfillment = body.execution_condition_fulfillment.subfulfillments[0]
+          const caseFulfillment = body.subfulfillments[0]
           caseFulfillment.signature = ''
 
           expect(body).to.deep.equal({
-            execution_condition_fulfillment: {
-              type: 'and',
-              subfulfillments: [{
-                type: 'ed25519-sha512',
-                signature: ''
-              }, this.exampleFulfillment]
-            }
+            type: 'and',
+            subfulfillments: [{
+              type: 'ed25519-sha512',
+              signature: ''
+            }, this.exampleFulfillment]
           })
           return true
         })
@@ -242,7 +238,7 @@ describe('Cases', function () {
       const exampleCase = this.basicCase
       exampleCase.id = 'http://localhost/cases/75159fb1-8ed2-4c92-9af7-0f48e2616f48'
       exampleCase.expires_at = (new Date(Date.now() + 1000)).toISOString()
-      exampleCase.completion_targets = ['http://ledger.example/transfers/123/fulfillment']
+      exampleCase.notification_targets = ['http://ledger.example/transfers/123/fulfillment']
       yield this.request()
         .put(exampleCase.id)
         .send(exampleCase)
@@ -251,8 +247,8 @@ describe('Cases', function () {
 
       const putNotification = nock('http://ledger.example')
         .put('/transfers/123/fulfillment', function (body) {
-          expect(body.cancellation_condition_fulfillment.type).to.equal('ed25519-sha512')
-          expect(body.cancellation_condition_fulfillment.signature).to.be.a('string')
+          expect(body.type).to.equal('ed25519-sha512')
+          expect(body.signature).to.be.a('string')
           return true
         })
         .reply(200)

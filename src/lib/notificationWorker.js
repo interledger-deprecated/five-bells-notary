@@ -32,10 +32,10 @@ class NotificationWorker {
 
   * queueNotifications (caseInstance, transaction) {
     this.log.debug('queueing notifications for case ' + caseInstance.id)
-    const notifications = yield caseInstance.completion_targets.map((completion_target) => {
+    const notifications = yield caseInstance.notification_targets.map((notification_target) => {
       return this.Notification.fromDatabaseModel(this.Notification.build({
         case_id: caseInstance.id,
-        completion_target
+        notification_target
       }, { transaction }))
     })
 
@@ -83,11 +83,11 @@ class NotificationWorker {
   }
 
   * processNotificationWithInstance (notification, caseInstance) {
-    this.log.debug('notifying completion_target ' + notification.completion_target +
+    this.log.debug('notifying notification_target ' + notification.notification_target +
                    ' about result: ' + caseInstance.state)
     let retry = true
     try {
-      const response = {}
+      let response = {}
 
       const stateAttestation = 'urn:notary:' + caseInstance.getDataExternal().id + ':' + caseInstance.state
       const stateHash = sha512(stateAttestation)
@@ -103,7 +103,7 @@ class NotificationWorker {
       }
 
       if (caseInstance.state === 'executed') {
-        response.execution_condition_fulfillment = {
+        response = {
           type: 'and',
           subfulfillments: [
             stateAttestationSigned,
@@ -111,13 +111,13 @@ class NotificationWorker {
           ]
         }
       } else if (caseInstance.state === 'rejected') {
-        response.cancellation_condition_fulfillment = stateAttestationSigned
+        response = stateAttestationSigned
       } else {
         retry = false
         throw new Error('Tried to send notification for a case that is not yet finalized')
       }
 
-      const result = yield request(notification.completion_target, {
+      const result = yield request(notification.notification_target, {
         method: 'put',
         json: true,
         body: response

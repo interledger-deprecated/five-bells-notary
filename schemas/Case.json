@@ -30,8 +30,8 @@
         "additionalProperies": false
       }
     },
-    "completion_targets": {
-      "description": "URIs of completion_targets that are invoked on the completion of this case",
+    "notification_targets": {
+      "description": "URIs Notary sends HTTP PUT request to, to notify the completion of this case",
       "type": "array",
       "items": {
         "$ref": "Iri.json"
@@ -42,6 +42,6 @@
       "enum": ["proposed", "executed", "rejected"]
     }
   },
-  "required": ["execution_condition", "expires_at", "notaries", "completion_targets"],
+  "required": ["execution_condition", "expires_at", "notaries", "notification_targets"],
   "additionalProperties": false
 }
