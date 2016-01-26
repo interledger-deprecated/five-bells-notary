@@ -7,8 +7,8 @@ const tweetnacl = require('tweetnacl')
 const UriManager = require('./uri')
 const Log = require('./log')
 const Config = require('./config')
-const NotificationFactory = require('../models/notification')
-const CaseFactory = require('../models/case')
+const NotificationFactory = require('../models/db/notification')
+const CaseFactory = require('../models/db/case')
 
 class NotificationWorker {
   static constitute () { return [ UriManager, Log, Config, NotificationFactory, CaseFactory ] }

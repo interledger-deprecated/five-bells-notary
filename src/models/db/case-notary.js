@@ -4,8 +4,8 @@ module.exports = CaseNotaryFactory
 
 const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
-const UriManager = require('../lib/uri')
-const Database = require('../lib/db')
+const UriManager = require('../../lib/uri')
+const Database = require('../../lib/db')
 const Sequelize = require('sequelize')
 
 CaseNotaryFactory.constitute = [Database, UriManager]
