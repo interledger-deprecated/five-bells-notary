@@ -154,7 +154,7 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should notify transfers when fulfilling a case', function *() {
+    it('should notify notification_targets when fulfilling a case', function *() {
       const exampleCase = this.cases.notification
 
       yield this.request()
@@ -163,29 +163,19 @@ describe('Cases', function () {
         .expect(200)
         .end()
 
-      const getNotification = nock('http://ledger.example')
-        .log(logger('nock').info)
-        .get('/transfers/123')
-        .reply(200, {
-          id: 'http://ledger.example/transfers/123'
-        })
-
       const putNotification = nock('http://ledger.example')
         .log(logger('nock').info)
-        .put('/transfers/123', (body) => {
+        .put('/transfers/123/fulfillment', (body) => {
           // TODO Verify signature
-          const caseFulfillment = body.execution_condition_fulfillment.subfulfillments[0]
+          const caseFulfillment = body.subfulfillments[0]
           caseFulfillment.signature = ''
 
           expect(body).to.deep.equal({
-            id: 'http://ledger.example/transfers/123',
-            execution_condition_fulfillment: {
-              type: 'and',
-              subfulfillments: [{
-                type: 'ed25519-sha512',
-                signature: ''
-              }, this.exampleFulfillment]
-            }
+            type: 'and',
+            subfulfillments: [{
+              type: 'ed25519-sha512',
+              signature: ''
+            }, this.exampleFulfillment]
           })
           return true
         })
@@ -193,7 +183,6 @@ describe('Cases', function () {
 
       yield notificationWorker.processNotificationQueue()
 
-      getNotification.done()
       putNotification.done()
     })
 
@@ -206,60 +195,40 @@ describe('Cases', function () {
         .expect(200)
         .end()
 
-      const getNotification1 = nock('http://ledger.example')
-        .log(logger('nock').info)
-        .get('/transfers/123')
-        .reply(500)
-      const getNotification2 = nock('http://ledger.example')
-        .log(logger('nock').info)
-        .get('/transfers/123')
-        .times(2)
-        .reply(200, { id: 'http://ledger.example/transfers/123' })
-
       const putNotification1 = nock('http://ledger.example')
-        .put('/transfers/123')
+        .put('/transfers/123/fulfillment')
         .reply(500)
       const putNotification2 = nock('http://ledger.example')
         .log(logger('nock').info)
-        .put('/transfers/123', (body) => {
+        .put('/transfers/123/fulfillment', (body) => {
           // TODO Verify signature
-          const caseFulfillment = body.execution_condition_fulfillment.subfulfillments[0]
+          const caseFulfillment = body.subfulfillments[0]
           caseFulfillment.signature = ''
 
           expect(body).to.deep.equal({
-            id: 'http://ledger.example/transfers/123',
-            execution_condition_fulfillment: {
-              type: 'and',
-              subfulfillments: [{
-                type: 'ed25519-sha512',
-                signature: ''
-              }, this.exampleFulfillment]
-            }
+            type: 'and',
+            subfulfillments: [{
+              type: 'ed25519-sha512',
+              signature: ''
+            }, this.exampleFulfillment]
           })
           return true
         })
         .reply(204)
 
-      // GET fails
-      yield notificationWorker.processNotificationQueue()
-      getNotification1.done()
-      expect(putNotification1.isDone()).to.equal(false)
-      this.clock.tick(500)
-
-      // Not ready to retry yet (backoff in effect)
-      yield notificationWorker.processNotificationQueue()
-      expect(putNotification1.isDone()).to.equal(false)
-      this.clock.tick(1501)
-
       // PUT fails
       yield notificationWorker.processNotificationQueue()
       putNotification1.done()
       expect(putNotification2.isDone()).to.equal(false)
-      this.clock.tick(4001)
+      this.clock.tick(500)
+
+      // Not ready to retry yet (backoff in effect)
+      yield notificationWorker.processNotificationQueue()
+      expect(putNotification2.isDone()).to.equal(false)
+      this.clock.tick(1501)
 
       // Success
       yield notificationWorker.processNotificationQueue()
-      getNotification2.done()
       putNotification2.done()
     })
   })
@@ -269,20 +238,17 @@ describe('Cases', function () {
       const exampleCase = this.basicCase
       exampleCase.id = 'http://localhost/cases/75159fb1-8ed2-4c92-9af7-0f48e2616f48'
       exampleCase.expires_at = (new Date(Date.now() + 1000)).toISOString()
-      exampleCase.transfers = ['http://ledger.example/transfers/123']
+      exampleCase.notification_targets = ['http://ledger.example/transfers/123/fulfillment']
       yield this.request()
         .put(exampleCase.id)
         .send(exampleCase)
         .expect(201)
         .end()
 
-      const getNotification = nock('http://ledger.example')
-        .get('/transfers/123')
-        .reply(200, { id: 'http://ledger.example/transfers/123' })
       const putNotification = nock('http://ledger.example')
-        .put('/transfers/123', function (body) {
-          expect(body.cancellation_condition_fulfillment.type).to.equal('ed25519-sha512')
-          expect(body.cancellation_condition_fulfillment.signature).to.be.a('string')
+        .put('/transfers/123/fulfillment', function (body) {
+          expect(body.type).to.equal('ed25519-sha512')
+          expect(body.signature).to.be.a('string')
           return true
         })
         .reply(200)
@@ -291,13 +257,12 @@ describe('Cases', function () {
       this.clock.tick(500)
       yield timerWorker.processTimeQueue()
       yield notificationWorker.processNotificationQueue()
-      expect(getNotification.isDone()).to.equal(false)
+      expect(putNotification.isDone()).to.equal(false)
 
       this.clock.tick(501)
       yield timerWorker.processTimeQueue()
       yield notificationWorker.processNotificationQueue()
 
-      getNotification.done()
       putNotification.done()
     })
   })

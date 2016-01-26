@@ -32,10 +32,10 @@ class NotificationWorker {
 
   * queueNotifications (caseInstance, transaction) {
     this.log.debug('queueing notifications for case ' + caseInstance.id)
-    const notifications = yield caseInstance.transfers.map((transfer) => {
+    const notifications = yield caseInstance.notification_targets.map((notification_target) => {
       return this.Notification.fromDatabaseModel(this.Notification.build({
         case_id: caseInstance.id,
-        transfer
+        notification_target
       }, { transaction }))
     })
 
@@ -83,17 +83,11 @@ class NotificationWorker {
   }
 
   * processNotificationWithInstance (notification, caseInstance) {
-    this.log.debug('notifying transfer ' + notification.transfer + ' about result: ' + caseInstance.state)
+    this.log.debug('notifying notification_target ' + notification.notification_target +
+                   ' about result: ' + caseInstance.state)
     let retry = true
     try {
-      const transferResult = yield request(notification.transfer, {
-        method: 'get',
-        json: true
-      })
-      if (transferResult.statusCode !== 200) {
-        throw new Error('Invalid transfer')
-      }
-      const transfer = transferResult.body
+      let response = {}
 
       const stateAttestation = 'urn:notary:' + caseInstance.getDataExternal().id + ':' + caseInstance.state
       const stateHash = sha512(stateAttestation)
@@ -109,7 +103,7 @@ class NotificationWorker {
       }
 
       if (caseInstance.state === 'executed') {
-        transfer.execution_condition_fulfillment = {
+        response = {
           type: 'and',
           subfulfillments: [
             stateAttestationSigned,
@@ -117,25 +111,25 @@ class NotificationWorker {
           ]
         }
       } else if (caseInstance.state === 'rejected') {
-        transfer.cancellation_condition_fulfillment = stateAttestationSigned
+        response = stateAttestationSigned
       } else {
         retry = false
         throw new Error('Tried to send notification for a case that is not yet finalized')
       }
 
-      const result = yield request(notification.transfer, {
+      const result = yield request(notification.notification_target, {
         method: 'put',
         json: true,
-        body: transfer
+        body: response
       })
       if (result.statusCode >= 400) {
-        this.log.debug(transfer)
+        this.log.debug(response)
         throw new Error('Remote error for notification ' + result.statusCode,
           result.body)
       }
       retry = false
     } catch (err) {
-      this.log.debug('notification send failed ' + err)
+      this.log.error('notification send failed ' + err)
     }
 
     if (retry) {

@@ -21,7 +21,7 @@ function NotificationFactory (container, sequelize, Case) {
 
   PersistentModelMixin(Notification, sequelize, {
     case_id: Sequelize.UUID,
-    transfer: Sequelize.TEXT,
+    notification_target: Sequelize.TEXT,
     retry_count: Sequelize.INTEGER,
     retry_at: Sequelize.DATE
   }, {

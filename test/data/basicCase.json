@@ -8,5 +8,5 @@
   "notaries": [{
     "url": "http://localhost"
   }],
-  "transfers": ["https://localhost:3001/transfers/123"]
+  "notification_targets": ["https://localhost:3001/transfers/123"]
 }
