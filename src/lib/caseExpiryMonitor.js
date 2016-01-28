@@ -6,7 +6,7 @@ const NotificationWorker = require('./notificationWorker')
 const DB = require('./db')
 const Log = require('./log')
 const ExpiredCaseError = require('../errors/expired-case-error')
-const CaseFactory = require('../models/case')
+const CaseFactory = require('../models/db/case')
 
 class CaseExpiryMonitor {
   static constitute () { return [ TimeQueue, NotificationWorker, DB, Log, CaseFactory ] }

@@ -5,7 +5,7 @@ module.exports = NotificationFactory
 const Container = require('constitute').Container
 const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
-const Database = require('../lib/db')
+const Database = require('../../lib/db')
 const Sequelize = require('sequelize')
 const CaseFactory = require('./case')
 
