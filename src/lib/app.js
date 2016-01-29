@@ -42,7 +42,6 @@ module.exports = class App {
   }
 
   * _start () {
-    yield this.db.sync()
     yield this.notificationWorker.start()
     yield this.timerWorker.start()
     this.listen()

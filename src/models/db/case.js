@@ -4,14 +4,13 @@ module.exports = CaseFactory
 
 const Container = require('constitute').Container
 const Model = require('five-bells-shared').Model
-const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
 const UriManager = require('../../lib/uri')
 const Database = require('../../lib/db')
 const Config = require('../../lib/config')
+const PersistentKnexModelMixin = require('five-bells-shared').PersistentKnexModelMixin
 const Validator = require('five-bells-shared/lib/validator')
-const Sequelize = require('sequelize')
-const NotaryFactory = require('./notary')
-const CaseNotaryFactory = require('./case-notary')
+const knex = require('../../lib/knex').knex
+const moment = require('moment')
 
 CaseFactory.constitute = [Database, UriManager, Validator, Container, Config]
 function CaseFactory (sequelize, uri, validator, container, config) {
@@ -30,69 +29,45 @@ function CaseFactory (sequelize, uri, validator, container, config) {
     static convertToExternal (data) {
       data.id = uri.make('case', data.id.toLowerCase())
       data.notaries = [config.server.base_uri]
-      data.expires_at = data.expires_at.toISOString()
+      data.expires_at = moment(data.expires_at).toISOString() // format('YYYY-MM-DD HH:mm:ss');
       delete data.Notaries
-      if (!data.execution_condition_fulfillment) {
-        delete data.execution_condition_fulfillment
+      if (!data.exec_cond_fulfillment) {
+        delete data.exec_cond_fulfillment
       }
       return data
     }
 
     static convertFromPersistent (data) {
       data.execution_condition = JSON.parse(data.execution_condition)
-      if (data.execution_condition_fulfillment) {
-        data.execution_condition_fulfillment = JSON.parse(data.execution_condition_fulfillment)
+      if (data.exec_cond_fulfillment) {
+        data.exec_cond_fulfillment = JSON.parse(data.exec_cond_fulfillment)
       }
       data.notification_targets = JSON.parse(data.notification_targets)
       delete data.created_at
       delete data.updated_at
+      if (!Array.isArray(data.notaries)) {
+        data.notaries = [ data.notaries ]
+      }
       return data
     }
 
     static convertToPersistent (data) {
       data.execution_condition = JSON.stringify(data.execution_condition)
-      data.execution_condition_fulfillment = JSON.stringify(data.execution_condition_fulfillment)
+      data.exec_cond_fulfillment = JSON.stringify(data.exec_cond_fulfillment)
       data.notification_targets = JSON.stringify(data.notification_targets)
+      // Massage notaries format
+      if (Array.isArray(data.notaries)) {
+        data.notaries = data.notaries[0]
+        if (data.notaries.url) data.notaries = data.notaries.url
+      }
       return data
     }
   }
 
   Case.validateExternal = validator.create('Case')
+  Case.tableName = 'cases'
 
-  PersistentModelMixin(Case, sequelize, {
-    id: {
-      type: Sequelize.UUID,
-      primaryKey: true
-    },
-    state: {
-      type: Sequelize.ENUM('proposed', 'executed', 'rejected')
-    },
-    expires_at: {
-      type: Sequelize.DATE
-    },
-    execution_condition: {
-      type: Sequelize.TEXT
-    },
-    execution_condition_fulfillment: {
-      type: Sequelize.TEXT
-    },
-    notification_targets: {
-      type: Sequelize.TEXT
-    }
-  })
-
-  // We use a post constructor in order to avoid issues with circular
-  // dependencies.
-  container.schedulePostConstructor((Notary, CaseNotary) => {
-    Case.DbModel.belongsToMany(Notary.DbModel, {
-      through: {
-        model: CaseNotary.DbModel,
-        unique: false
-      },
-      foreignKey: 'case_id',
-      constraints: false
-    })
-  }, [ NotaryFactory, CaseNotaryFactory ])
+  PersistentKnexModelMixin(Case, knex)
 
   return Case
 }

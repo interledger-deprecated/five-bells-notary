@@ -7,6 +7,8 @@ const DB = require('./db')
 const Log = require('./log')
 const ExpiredCaseError = require('../errors/expired-case-error')
 const CaseFactory = require('../models/db/case')
+const co = require('co')
+const knex = require('./knex')
 
 class CaseExpiryMonitor {
   static constitute () { return [ TimeQueue, NotificationWorker, DB, Log, CaseFactory ] }
@@ -29,24 +31,34 @@ class CaseExpiryMonitor {
   * expireCase (caseId) {
     const _this = this
 
-    yield this.db.transaction(function *(transaction) {
-      let caseInstance = yield _this.Case.findById(caseId, { transaction })
+    // Combination of transaction / knex / sqlite3 doesn't seem to work,
+    // So don't use transaction on sqlite3.
+    const dbAccess = function * (transaction) {
+      let caseInstance = yield _this.Case.findById(caseId, {transaction})
 
       if (!caseInstance) {
         _this.log.error('trying to expire case that cannot be found ' +
           'in the database: ' + caseId)
-        return
+        throw new ExpiredCaseError('trying to expire case that cannot be found ' +
+                                   'in the database: ' + caseId)
       }
 
       if (caseInstance.state === 'proposed') {
         caseInstance.state = 'rejected'
-        yield caseInstance.save({ transaction })
+        yield caseInstance.save({transaction})
 
         _this.log.debug('expired case: ' + caseId)
 
-        yield _this.notificationWorker.queueNotifications(caseInstance, transaction)
+        yield _this.notificationWorker.queueNotifications(caseInstance, {transaction})
       }
-    })
+    }
+    if (knex.config.client === 'sqlite3') {
+      yield dbAccess()
+    } else {
+      yield knex.knex.transaction(co.wrap(function *(transaction) {
+        yield dbAccess(transaction)
+      }))
+    }
 
     // Should process case state notifications soon, because some cases
     // may have changed state

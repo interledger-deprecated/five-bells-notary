@@ -2,7 +2,6 @@
 
 const request = require('five-bells-shared/utils/request')
 const CasesFactory = require('../models/cases')
-
 CasesControllerFactory.constitute = [CasesFactory]
 function CasesControllerFactory (Cases) {
   return class CasesController {

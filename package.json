@@ -30,6 +30,7 @@
     "constitute": "^1.2.0",
     "five-bells-condition": "^2.0.0",
     "five-bells-shared": "^8.10.0",
+    "knex": "^0.9.0",
     "koa": "^1.0.0",
     "koa-mag": "^1.1.0",
     "koa-router": "^5.1.2",
@@ -39,7 +40,7 @@
     "moment": "^2.10.6",
     "mysql": "^2.9.0",
     "priorityqueuejs": "^1.0.0",
-    "sequelize": "^3.7.1",
+    "strong-oracle": "^1.8.0",
     "tweetnacl": "^0.13.2"
   },
   "devDependencies": {

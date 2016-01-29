@@ -4,13 +4,12 @@ module.exports = NotificationFactory
 
 const Container = require('constitute').Container
 const Model = require('five-bells-shared').Model
-const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
-const Database = require('../../lib/db')
-const Sequelize = require('sequelize')
+const PersistentKnexModelMixin = require('five-bells-shared').PersistentKnexModelMixin
 const CaseFactory = require('./case')
+const knex = require('../../lib/knex').knex
 
-NotificationFactory.constitute = [Container, Database, CaseFactory]
-function NotificationFactory (container, sequelize, Case) {
+NotificationFactory.constitute = [Container, CaseFactory]
+function NotificationFactory (container, Case) {
   class Notification extends Model {
     static convertFromPersistent (data) {
       delete data.created_at
@@ -19,19 +18,9 @@ function NotificationFactory (container, sequelize, Case) {
     }
   }
 
-  PersistentModelMixin(Notification, sequelize, {
-    case_id: Sequelize.UUID,
-    notification_target: Sequelize.TEXT,
-    retry_count: Sequelize.INTEGER,
-    retry_at: Sequelize.DATE
-  }, {
-    indexes: [
-      { fields: ['case_id'] },
-      { fields: ['retry_at'] }
-    ]
-  })
+  Notification.tableName = 'notifications'
 
-  Notification.DbModel.belongsTo(Case.DbModel)
+  PersistentKnexModelMixin(Notification, knex)
 
   return Notification
 }

@@ -10,6 +10,7 @@ const Log = require('./log')
 const Config = require('./config')
 const NotificationFactory = require('../models/db/notification')
 const CaseFactory = require('../models/db/case')
+const knex = require('../lib/knex').knex
 
 class NotificationWorker {
   static constitute () { return [ UriManager, Log, Config, NotificationFactory, CaseFactory ] }
@@ -33,11 +34,11 @@ class NotificationWorker {
 
   * queueNotifications (caseInstance, transaction) {
     this.log.debug('queueing notifications for case ' + caseInstance.id)
-    const notifications = yield caseInstance.notification_targets.map((notification_target) => {
-      return this.Notification.fromDatabaseModel(this.Notification.build({
-        case_id: caseInstance.id,
-        notification_target
-      }, { transaction }))
+    const notifications = caseInstance.notification_targets.map((notification_target) => {
+      const n = new this.Notification()
+      n.case_id = caseInstance.id
+      n.notification_target = notification_target
+      return n
     })
 
     yield this.Notification.bulkCreate(notifications, { transaction })
@@ -60,14 +61,9 @@ class NotificationWorker {
   }
 
   * processNotificationQueue () {
-    const notifications = yield this.Notification.findAll({
-      where: {
-        $or: [
-          { retry_at: null },
-          { retry_at: {lt: new Date()} }
-        ]
-      }
-    })
+    const notifications = yield knex(this.Notification.tableName).select()
+          .where('retry_at', null).orWhere('retry_at', '<', new Date()).then()
+
     if (notifications.length) {
       this.log.debug('processing ' + notifications.length + ' notifications')
       yield notifications.map(this.processNotification.bind(this))
@@ -79,7 +75,9 @@ class NotificationWorker {
   }
 
   * processNotification (notification) {
-    const caseInstance = this.Case.fromDatabaseModel(yield notification.getDatabaseModel().getCase())
+    notification = this.Notification.fromData(notification)
+    const caseInstance = yield this.Case.findById(notification.case_id)
+    // const caseInstance = this.Case.fromDatabaseModel(yield notification.getDatabaseModel().getCase())
     yield this.processNotificationWithInstance(notification, caseInstance)
   }
 
@@ -108,7 +106,7 @@ class NotificationWorker {
           type: 'and',
           subfulfillments: [
             stateAttestationSigned,
-            caseInstance.execution_condition_fulfillment
+            caseInstance.exec_cond_fulfillment
           ]
         }
       } else if (caseInstance.state === 'rejected') {
@@ -139,7 +137,7 @@ class NotificationWorker {
       notification.retry_at = new Date(Date.now() + 1000 * delay)
       yield notification.save()
     } else {
-      yield notification.destroy()
+      yield notification.destroy({'id': notification.id})
     }
   }
 
