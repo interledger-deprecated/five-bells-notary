@@ -4,6 +4,7 @@ const crypto = require('crypto')
 const defer = require('co-defer')
 const request = require('co-request')
 const tweetnacl = require('tweetnacl')
+const makeCaseAttestation = require('five-bells-shared/utils/makeCaseAttestation')
 const UriManager = require('./uri')
 const Log = require('./log')
 const Config = require('./config')
@@ -89,7 +90,7 @@ class NotificationWorker {
     try {
       let response = {}
 
-      const stateAttestation = 'urn:notary:' + caseInstance.getDataExternal().id + ':' + caseInstance.state
+      const stateAttestation = makeCaseAttestation(caseInstance.getDataExternal().id, caseInstance.state)
       const stateHash = sha512(stateAttestation)
       this.log.info('attesting state ' + stateAttestation)
 
