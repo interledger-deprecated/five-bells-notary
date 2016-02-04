@@ -16,7 +16,7 @@ module.exports = {
     'client': 'strong-oracle',
     'connection': {
       database: '',
-      hostname: '192.168.99.100:49161/',// Set this to IP address Oracle Docker is on
+      hostname: '192.168.99.100:49161/', // Set this to IP address Oracle Docker is on
       user: 'system', // Use system user ONLY FOR TESTING
       password: 'oracle',
       adapter: 'oracle'
