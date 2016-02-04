@@ -5,7 +5,6 @@ const nock = require('nock')
 const expect = require('chai').expect
 const sinon = require('sinon')
 const Log = require('../src/lib/log')
-const DB = require('../src/lib/db')
 const CaseFactory = require('../src/models/db/case')
 const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
@@ -15,11 +14,12 @@ const TimerWorker = require('../src/lib/timerWorker')
 const Container = require('constitute').Container
 const container = new Container()
 
+const knex = require('../src/lib/knex')
+
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
 describe('Cases', function () {
   const logger = container.constitute(Log)
-  const db = container.constitute(DB)
   const notificationWorker = container.constitute(NotificationWorker)
   const timerWorker = container.constitute(TimerWorker)
   const Case = container.constitute(CaseFactory)
@@ -28,10 +28,11 @@ describe('Cases', function () {
   beforeEach(function *() {
     appHelper.create(this, container)
 
-    yield db.dropAllSchemas()
-    yield db.sync()
+    // knex initialize DB
+    yield knex.knex.migrate.rollback(knex.config)
+    yield knex.knex.migrate.latest(knex.config)
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     this.cases = _.cloneDeep(require('./data/cases'))
     yield Case.bulkCreateExternal(_.values(this.cases))
@@ -97,7 +98,7 @@ describe('Cases', function () {
     it('should return 200 when fulfilling a case', function *() {
       const exampleCase = this.cases.simple
 
-      exampleCase.execution_condition_fulfillment = this.exampleFulfillment
+      exampleCase.exec_cond_fulfillment = this.exampleFulfillment
       exampleCase.state = 'executed'
 
       yield this.request()
@@ -137,7 +138,7 @@ describe('Cases', function () {
     it('should return 422 when an invalid fulfillment is sent', function *() {
       const exampleCase = this.cases.simple
 
-      exampleCase.execution_condition_fulfillment = this.exampleFulfillment
+      exampleCase.exec_cond_fulfillment = this.exampleFulfillment
       exampleCase.state = 'executed'
 
       yield this.request()
@@ -149,7 +150,7 @@ describe('Cases', function () {
         .expect(422)
         .expect({
           id: 'UnmetConditionError',
-          message: 'Invalid execution_condition_fulfillment'
+          message: 'Invalid exec_cond_fulfillment'
         })
         .end()
     })

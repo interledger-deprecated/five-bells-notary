@@ -4,7 +4,6 @@ module.exports = CasesFactory
 
 const co = require('co')
 const CaseFactory = require('./db/case')
-const NotaryFactory = require('./db/notary')
 const Log = require('../lib/log')
 const DB = require('../lib/db')
 const Config = require('../lib/config')
@@ -14,15 +13,14 @@ const Condition = require('five-bells-condition').Condition
 const UnprocessableEntityError = require('five-bells-shared').UnprocessableEntityError
 const UnmetConditionError = require('five-bells-shared').UnmetConditionError
 const NotFoundError = require('five-bells-shared').NotFoundError
+const knex = require('../lib/knex')
 
-CasesFactory.constitute = [CaseFactory, NotaryFactory, Log, DB, Config, NotificationWorker, CaseExpiryMonitor]
-function CasesFactory (Case, Notary, log, db, config, notificationWorker, caseExpiryMonitor) {
-  const logger = log('cases')
-
+CasesFactory.constitute = [CaseFactory, Log, DB, Config, NotificationWorker, CaseExpiryMonitor]
+function CasesFactory (Case, log, db, config, notificationWorker, caseExpiryMonitor) {
   return class Cases {
 
     static * getCase (caseId) {
-      const item = yield Case.findById(caseId, { include: [ Notary.DbModel ] })
+      const item = yield Case.findById(caseId)
       if (!item) {
         throw new NotFoundError('Case ' + caseId + ' not found')
       }
@@ -39,14 +37,18 @@ function CasesFactory (Case, Notary, log, db, config, notificationWorker, caseEx
         throw new UnprocessableEntityError(`The notary in the case must match this notary (expected: "${config.server.base_uri}", actual: "${caseInstance.notaries[0].url}")`)
       }
 
-      yield db.transaction(co.wrap(function * (transaction) {
-        // const notaries = yield Notary.bulkCreate(caseInstance.notaries, { transaction })
-        yield Case.create(caseInstance, { transaction })
-        // yield caseInstance.getDatabaseModel().addNotaries(notaries, { transaction })
-      }))
-
-      logger.debug('created case ID ' + caseId)
-
+      // Combination of transaction / knex / sqlite3 doesn't seem to work,
+      // So don't use transaction on sqlite3.
+      const dbAccess = function * (transaction) {
+        yield Case.create(caseInstance, {transaction})
+      }
+      if (knex.config.client === 'sqlite3') {
+        yield dbAccess()
+      } else {
+        yield knex.knex.transaction(co.wrap(function *(transaction) {
+          yield dbAccess(transaction)
+        }))
+      }
       yield caseExpiryMonitor.watch(caseInstance)
 
       return caseInstance.getDataExternal()
@@ -54,25 +56,33 @@ function CasesFactory (Case, Notary, log, db, config, notificationWorker, caseEx
 
     static * fulfillCase (caseId, fulfillment) {
       const caseInstance = yield Case.findById(caseId)
-
       if (!caseInstance) {
         throw new UnprocessableEntityError('Unknown case ID ' + caseId)
       } else if (caseInstance.state === 'rejected') {
         throw new UnprocessableEntityError('Case ' + caseId + ' is already rejected')
       } else if (!Condition.testFulfillment(caseInstance.execution_condition, fulfillment)) {
-        throw new UnmetConditionError('Invalid execution_condition_fulfillment')
+        throw new UnmetConditionError('Invalid exec_cond_fulfillment')
       }
 
       caseExpiryMonitor.validateNotExpired(caseInstance)
 
       if (caseInstance.state !== 'executed') {
         caseInstance.state = 'executed'
-        caseInstance.execution_condition_fulfillment = fulfillment
+        caseInstance.exec_cond_fulfillment = fulfillment
 
-        yield db.transaction(function *(transaction) {
-          yield caseInstance.save({ transaction })
-          yield notificationWorker.queueNotifications(caseInstance, transaction)
-        })
+        // Combination of transaction / knex / sqlite3 doesn't seem to work,
+        // So don't use transaction on sqlite3.
+        const dbAccess = function * (transaction) {
+          yield caseInstance.save({transaction})
+          yield notificationWorker.queueNotifications(caseInstance, {transaction})
+        }
+        if (knex.config.client === 'sqlite3') {
+          yield dbAccess()
+        } else {
+          yield knex.knex.transaction(co.wrap(function *(transaction) {
+            yield dbAccess(transaction)
+          }))
+        }
       }
 
       return caseInstance.getDataExternal()
