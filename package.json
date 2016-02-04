@@ -40,7 +40,6 @@
     "moment": "^2.10.6",
     "mysql": "^2.9.0",
     "priorityqueuejs": "^1.0.0",
-    "strong-oracle": "^1.8.0",
     "tweetnacl": "^0.13.2"
   },
   "devDependencies": {
