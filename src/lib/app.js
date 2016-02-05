@@ -5,7 +5,7 @@ const koa = require('koa')
 const logger = require('koa-mag')
 const errorHandler = require('five-bells-shared/middlewares/error-handler')
 const Validator = require('five-bells-shared').Validator
-const Config = require('./config')
+const config = require('./config')
 const Router = require('./router')
 const DB = require('./db')
 const Log = require('./log')
@@ -14,9 +14,8 @@ const TimerWorker = require('./timerWorker')
 const knex = require('./knex')
 
 module.exports = class App {
-  static constitute () { return [ Config, Router, Validator, DB, Log, NotificationWorker, TimerWorker ] }
-  constructor (config, router, validator, db, log, notificationWorker, timerWorker) {
-    this.config = config
+  static constitute () { return [ Router, Validator, DB, Log, NotificationWorker, TimerWorker ] }
+  constructor (router, validator, db, log, notificationWorker, timerWorker) {
     this.router = router
     this.validator = validator
     this.db = db
@@ -53,9 +52,9 @@ module.exports = class App {
   }
 
   listen () {
-    this.app.listen(this.config.server.port)
-    this.log.info('notary listening on ' + this.config.server.bind_ip +
-      ':' + this.config.server.port)
-    this.log.info('public at ' + this.config.server.base_uri)
+    this.app.listen(config.getIn(['server', 'port']))
+    this.log.info('notary listening on ' + config.getIn(['server', 'bind_ip']) +
+      ':' + config.getIn(['server', 'port']))
+    this.log.info('public at ' + config.getIn(['server', 'base_uri']))
   }
 }

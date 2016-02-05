@@ -7,19 +7,18 @@ const tweetnacl = require('tweetnacl')
 const makeCaseAttestation = require('five-bells-shared/utils/makeCaseAttestation')
 const UriManager = require('./uri')
 const Log = require('./log')
-const Config = require('./config')
+const config = require('./config')
 const NotificationFactory = require('../models/db/notification')
 const CaseFactory = require('../models/db/case')
 const knex = require('../lib/knex').knex
 
 class NotificationWorker {
-  static constitute () { return [ UriManager, Log, Config, NotificationFactory, CaseFactory ] }
-  constructor (uri, log, config, Notification, Case) {
+  static constitute () { return [ UriManager, Log, NotificationFactory, CaseFactory ] }
+  constructor (uri, log, Notification, Case) {
     this._timeout = null
 
     this.uri = uri
     this.log = log('notificationWorker')
-    this.config = config
     this.Notification = Notification
     this.Case = Case
 
@@ -97,7 +96,7 @@ class NotificationWorker {
         type: 'ed25519-sha512',
         signature: tweetnacl.util.encodeBase64(tweetnacl.sign.detached(
           tweetnacl.util.decodeBase64(stateHash),
-          tweetnacl.util.decodeBase64(this.config.keys.ed25519.secret)
+          tweetnacl.util.decodeBase64(config.getIn(['keys', 'ed25519', 'secret']))
         ))
       }
 
