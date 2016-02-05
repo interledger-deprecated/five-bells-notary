@@ -11,7 +11,20 @@ Of course, now the transactional semantics depend on safety and liveness of the 
 
 ## Usage
 
+To run with sqlite,
+
 ```
 npm install
-NOTARY_DB_URI='sqlite://' npm start
+npm install sqlite3
+npm start
 ```
+
+To run with Oracle, first, install Oracle Instant Client, e.g, in /opt/oracle/instantclient.
+
+```
+npm install
+npm install strong-oracle
+NOTARY_DB_ENV=oracledev DYLD_LIBRARY_PATH='/opt/oracle/instantclient' npm start
+```
+
+To create database tables before running, set environment variable NOTARY_RUN_MIGRATION on ```npm start```.

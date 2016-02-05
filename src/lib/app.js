@@ -11,6 +11,7 @@ const DB = require('./db')
 const Log = require('./log')
 const NotificationWorker = require('./notificationWorker')
 const TimerWorker = require('./timerWorker')
+const knex = require('./knex')
 
 module.exports = class App {
   static constitute () { return [ Config, Router, Validator, DB, Log, NotificationWorker, TimerWorker ] }
@@ -42,6 +43,10 @@ module.exports = class App {
   }
 
   * _start () {
+    if (process.env.NOTARY_RUN_MIGRATION) {
+      yield knex.knex.migrate.rollback(knex.config)
+      yield knex.knex.migrate.latest(knex.config)
+    }
     yield this.notificationWorker.start()
     yield this.timerWorker.start()
     this.listen()
