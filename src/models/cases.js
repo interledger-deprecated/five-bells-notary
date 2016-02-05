@@ -6,7 +6,7 @@ const co = require('co')
 const CaseFactory = require('./db/case')
 const Log = require('../lib/log')
 const DB = require('../lib/db')
-const Config = require('../lib/config')
+const config = require('../lib/config')
 const NotificationWorker = require('../lib/notificationWorker')
 const CaseExpiryMonitor = require('../lib/caseExpiryMonitor')
 const Condition = require('five-bells-condition').Condition
@@ -15,8 +15,8 @@ const UnmetConditionError = require('five-bells-shared').UnmetConditionError
 const NotFoundError = require('five-bells-shared').NotFoundError
 const knex = require('../lib/knex')
 
-CasesFactory.constitute = [CaseFactory, Log, DB, Config, NotificationWorker, CaseExpiryMonitor]
-function CasesFactory (Case, log, db, config, notificationWorker, caseExpiryMonitor) {
+CasesFactory.constitute = [CaseFactory, Log, DB, NotificationWorker, CaseExpiryMonitor]
+function CasesFactory (Case, log, db, notificationWorker, caseExpiryMonitor) {
   return class Cases {
 
     static * getCase (caseId) {
@@ -33,8 +33,9 @@ function CasesFactory (Case, log, db, config, notificationWorker, caseExpiryMoni
 
       if (caseInstance.notaries.length !== 1) {
         throw new UnprocessableEntityError('The case must contain exactly one notary (this notary)')
-      } else if (caseInstance.notaries[0].url !== config.server.base_uri) {
-        throw new UnprocessableEntityError(`The notary in the case must match this notary (expected: "${config.server.base_uri}", actual: "${caseInstance.notaries[0].url}")`)
+      } else if (caseInstance.notaries[0].url !== config.getIn(['server', 'base_uri'])) {
+        throw new UnprocessableEntityError(`The notary in the case must match this notary ` +
+            `(expected: "${config.getIn(['server', 'base_uri'])}", actual: "${caseInstance.notaries[0].url}")`)
       }
 
       // Combination of transaction / knex / sqlite3 doesn't seem to work,
