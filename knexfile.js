@@ -1,12 +1,18 @@
 'use strict'
 
+const reSqlite = /^sqlite:\/\//
+const dbURI = process.env.NOTARY_DB_URI
+let sqliteFilename = 'sqlite.db'
+if (reSqlite.test(dbURI)) {
+  sqliteFilename = dbURI.replace(reSqlite, '')
+}
+
 module.exports = {
   // sqlite
   development: {
-    'debug': true,
     'client': 'sqlite3',
     'connection': {
-      'filename': 'sqlite.db'
+      'filename': sqliteFilename
     }
   },
   // Set environment variables NOTARY_DB_ENV=oracledev
