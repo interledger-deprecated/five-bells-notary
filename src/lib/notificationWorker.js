@@ -109,7 +109,7 @@ class NotificationWorker {
       }
 
       const result = yield request(notification.notification_target, {
-        method: 'post',
+        method: 'put',
         json: true,
         body: response
       })
