@@ -37,7 +37,7 @@ module.exports = class App {
 
   start () {
     co(this._start.bind(this)).catch((err) => {
-      this.log.critical(err)
+      this.log.critical(err.stack)
     })
   }
 
@@ -46,8 +46,8 @@ module.exports = class App {
       yield knex.knex.migrate.rollback(knex.config)
       yield knex.knex.migrate.latest(knex.config)
     }
-    yield this.notificationWorker.start()
-    yield this.timerWorker.start()
+    this.notificationWorker.start()
+    this.timerWorker.start()
     this.listen()
   }
 

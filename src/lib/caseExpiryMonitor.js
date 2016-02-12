@@ -59,10 +59,6 @@ class CaseExpiryMonitor {
         yield dbAccess(transaction)
       }))
     }
-
-    // Should process case state notifications soon, because some cases
-    // may have changed state
-    this.notificationWorker.scheduleProcessing()
   }
 
   * watch (caseInstance) {

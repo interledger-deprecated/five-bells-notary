@@ -18,7 +18,7 @@ class TimerWorker {
     this.listener = null
   }
 
-  * start () {
+  start () {
     const _this = this
 
     // Make sure we only have one listener waiting for new

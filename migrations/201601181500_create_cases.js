@@ -17,7 +17,7 @@ exports.up = function (knex, Promise) {
       table.varchar('case_id', 40)
       table.varchar('notification_target', 1024)
       table.integer('retry_count')
-      table.dateTime('retry_at', false)
+      table.dateTime('retry_at', false).nullable()
       // table.timestamps()
     })
   ])

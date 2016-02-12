@@ -1,10 +1,11 @@
 'use strict'
 
 const crypto = require('crypto')
-const defer = require('co-defer')
+const co = require('co')
 const request = require('co-request')
 const tweetnacl = require('tweetnacl')
 const makeCaseAttestation = require('five-bells-shared/utils/makeCaseAttestation')
+const NotificationScheduler = require('five-bells-shared').NotificationScheduler
 const UriManager = require('./uri')
 const Log = require('./log')
 const config = require('./config')
@@ -15,21 +16,21 @@ const knex = require('../lib/knex').knex
 class NotificationWorker {
   static constitute () { return [ UriManager, Log, NotificationFactory, CaseFactory ] }
   constructor (uri, log, Notification, Case) {
-    this._timeout = null
-
     this.uri = uri
     this.log = log('notificationWorker')
     this.Notification = Notification
     this.Case = Case
 
-    this.processingInterval = 1000
+    this.scheduler = new NotificationScheduler({
+      Notification, knex,
+      log: log('notificationScheduler'),
+      processNotification: this.processNotification.bind(this)
+    })
   }
 
-  * start () {
-    if (!this._timeout) {
-      this._timeout = defer.setTimeout(this.processNotificationQueue.bind(this), this.processingInterval)
-    }
-  }
+  start () { this.scheduler.start() }
+  stop () { this.scheduler.stop() }
+  processNotificationQueue () { return this.scheduler.processQueue() }
 
   * queueNotifications (caseInstance, transaction) {
     this.log.debug('queueing notifications for case ' + caseInstance.id)
@@ -42,35 +43,15 @@ class NotificationWorker {
 
     yield this.Notification.bulkCreate(notifications, { transaction })
 
-    // for (const notification of notifications) {
-    //   // We will schedule an immediate attempt to send the notification for
-    //   // performance in the good case.
-    //   co(this.processNotificationWithInstance(notification, caseInstance)).catch((err) => {
-    //     this.log.debug('immediate notification send failed ' + err)
-    //   })
-    // }
-  }
-
-  scheduleProcessing () {
-    if (this._timeout) {
-      this.log.debug('scheduling notifications')
-      clearTimeout(this._timeout)
-      defer(this.processNotificationQueue.bind(this))
-    }
-  }
-
-  * processNotificationQueue () {
-    const notifications = yield knex(this.Notification.tableName).select()
-          .where('retry_at', null).orWhere('retry_at', '<', new Date()).then()
-
-    if (notifications.length) {
-      this.log.debug('processing ' + notifications.length + ' notifications')
-      yield notifications.map(this.processNotification.bind(this))
-    }
-    if (this._timeout) {
-      clearTimeout(this._timeout)
-      this._timeout = defer.setTimeout(this.processNotificationQueue.bind(this), this.processingInterval)
-    }
+    // We will schedule an immediate attempt to send the notification for
+    // performance in the good case.
+    // Don't schedule the immediate attempt if the worker isn't active, though.
+    if (!this.scheduler.isEnabled()) return
+    const log = this.log
+    co(this.processNotificationsWithInstance.bind(this), notifications, caseInstance)
+      .catch(function (err) {
+        log.warn('immediate notification send failed ' + err.stack)
+      })
   }
 
   * processNotification (notification) {
@@ -80,6 +61,18 @@ class NotificationWorker {
     yield this.processNotificationWithInstance(notification, caseInstance)
   }
 
+  * processNotificationsWithInstance (notifications, caseInstance) {
+    yield notifications.map(function (notification) {
+      return this.processNotificationWithInstance(notification, caseInstance)
+    }, this)
+    // Schedule any retries.
+    yield this.scheduler.scheduleProcessing()
+  }
+
+  /**
+   * @param {Notification} notification
+   * @param {Case} caseInstance
+   */
   * processNotificationWithInstance (notification, caseInstance) {
     this.log.debug('notifying notification_target ' + notification.notification_target +
                    ' about result: ' + caseInstance.state)
@@ -131,19 +124,9 @@ class NotificationWorker {
     }
 
     if (retry) {
-      let retries = notification.retry_count = (notification.retry_count || 0) + 1
-      let delay = Math.min(120, Math.pow(2, retries))
-      notification.retry_at = new Date(Date.now() + 1000 * delay)
-      yield notification.save()
+      yield this.scheduler.retryNotification(notification)
     } else {
-      yield notification.destroy({'id': notification.id})
-    }
-  }
-
-  stop () {
-    if (this._timeout) {
-      clearTimeout(this._timeout)
-      this._timeout = null
+      yield notification.destroy()
     }
   }
 }
