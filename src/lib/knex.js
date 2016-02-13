@@ -8,10 +8,11 @@ const knexConfigEnv = process.env.NOTARY_DB_ENV ? process.env.NOTARY_DB_ENV
       : 'development'
 const knexConfig = require('../../knexfile')[knexConfigEnv]
 const knex = require('knex')(knexConfig)
+const path = require('path')
 
 module.exports.knex = knex
 module.exports.config = {
-  directory: __dirname + '/../../migrations',
+  directory: path.join(__dirname, '/../../migrations'),
   // this table will be populated with some information about your
   // migration files.  it will be automatically created, if it
   // doesn't already exist.
