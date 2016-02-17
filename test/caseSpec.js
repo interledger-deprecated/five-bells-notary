@@ -88,7 +88,7 @@ describe('Cases', function () {
         .expect(422)
         .expect({
           id: 'UnprocessableEntityError',
-          message: 'The notary in the case must match this notary (expected: "http://localhost", actual: "http://example.com")'
+          message: "The notary in the case must match this notary (expected: \"http://localhost\", actual: 'http://example.com')"
         })
         .end()
     })

@@ -12,6 +12,7 @@ const Log = require('./log')
 const NotificationWorker = require('./notificationWorker')
 const TimerWorker = require('./timerWorker')
 const knex = require('./knex')
+const path = require('path')
 
 module.exports = class App {
   static constitute () { return [ Router, Validator, DB, Log, NotificationWorker, TimerWorker ] }
@@ -24,8 +25,8 @@ module.exports = class App {
     this.timerWorker = timerWorker
 
     validator.loadSharedSchemas()
-    validator.loadSchemasFromDirectory(__dirname + '/../../schemas')
-    validator.loadSchemasFromDirectory(__dirname + '/../../node_modules/five-bells-condition/schemas')
+    validator.loadSchemasFromDirectory(path.join(__dirname, '/../../schemas'))
+    validator.loadSchemasFromDirectory(path.join(__dirname, '/../../node_modules/five-bells-condition/schemas'))
 
     const app = this.app = koa()
     app.use(logger({mag: log('http')}))
