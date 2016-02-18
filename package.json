@@ -14,7 +14,8 @@
     "test": "NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
     "test-oracle": "NOTARY_DB_ENV=oracledev DYLD_LIBRARY_PATH=/opt/oracle/instantclient NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
     "test-oracle-ci": "NOTARY_DB_ENV=oracleci LD_LIBRARY_PATH=/opt/oracle/instantclient NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
-    "bump": "version-bump"
+    "bump": "version-bump",
+    "integration": "integration all"
   },
   "keywords": [
     "consensus",
@@ -54,6 +55,7 @@
     "eslint": "^1.3.1",
     "eslint-config-standard": "^4.3.1",
     "eslint-plugin-standard": "^1.3.0",
+    "five-bells-integration-test": "^1.0.0",
     "istanbul": "^0.4.0",
     "methods": "^1.1.1",
     "mocha": "^2.3.4",
