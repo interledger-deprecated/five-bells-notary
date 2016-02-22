@@ -9,8 +9,6 @@
  * @apiDescription This endpoint will perform a quick self-check to ensure the
  *   server is still operating correctly.
  *
- * @apiIgnore For internal use.
- *
  * @returns {void}
  */
 exports.getResource = function * health () {
