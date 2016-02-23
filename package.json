@@ -9,7 +9,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "lint": "eslint .",
+    "lint": "eslint src test *.js",
+    "apidoc": "apidoc -o apidoc-out -i src/controllers/",
     "test": "NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
     "test-oracle": "NOTARY_DB_ENV=oracledev DYLD_LIBRARY_PATH=/opt/oracle/instantclient NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
     "test-oracle-ci": "NOTARY_DB_ENV=oracleci LD_LIBRARY_PATH=/opt/oracle/instantclient NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha"
@@ -45,6 +46,7 @@
     "tweetnacl": "^0.13.2"
   },
   "devDependencies": {
+    "apidoc": "^0.13.1",
     "chai": "^3.4.1",
     "co-mocha": "^1.1.2",
     "co-supertest": "0.0.10",
