@@ -7,6 +7,9 @@
 const knexConfigEnv = process.env.NOTARY_DB_ENV ? process.env.NOTARY_DB_ENV
       : 'development'
 const knexConfig = require('../../knexfile')[knexConfigEnv]
+// Read Oracle user name and password from environment variable
+knexConfig.connection.user = process.env.NOTARY_ORACLE_USER || knexConfig.connection.user
+knexConfig.connection.password = process.env.NOTARY_ORACLE_PASSWORD || knexConfig.connection.password
 const knex = require('knex')(knexConfig)
 const path = require('path')
 
