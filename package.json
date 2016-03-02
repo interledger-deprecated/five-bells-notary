@@ -13,7 +13,9 @@
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
     "test": "NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
     "test-oracle": "NOTARY_DB_ENV=oracledev DYLD_LIBRARY_PATH=/opt/oracle/instantclient NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
-    "test-oracle-ci": "NOTARY_DB_ENV=oracleci LD_LIBRARY_PATH=/opt/oracle/instantclient NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha"
+    "test-oracle-ci": "NOTARY_DB_ENV=oracleci LD_LIBRARY_PATH=/opt/oracle/instantclient NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
+    "preversion": "npm test",
+    "postversion": "git push --follow-tags"
   },
   "keywords": [
     "consensus",
