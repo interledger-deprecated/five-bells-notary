@@ -38,9 +38,10 @@ test:
     - npm test
     # Run unit tests on Oracle
     - npm run test-oracle-ci
+    # Run integration test suite
+    - npm run integration
     # Generate API documentation
     - npm run apidoc
-
 deployment:
   production:
     branch: master
