@@ -21,7 +21,6 @@ function CasesControllerFactory (Cases) {
       const id = this.params.id.toLowerCase()
       request.validateUriParameter('id', id, 'Uuid')
       this.body = yield Cases.getCase(id)
-      console.log('getResource result: ' + JSON.stringify(this.body, null, 2))
     }
 
     /**
