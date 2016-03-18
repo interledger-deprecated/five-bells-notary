@@ -32,14 +32,14 @@ class TimerWorker {
   }
 
   * processTimeQueue () {
-    // Process expired transfers
+    // Process expired cases
     yield this.caseExpiryMonitor.processExpiredCases()
 
     // Set the timer to the earliest date on the timeQueue
     if (this.timeout) {
       clearTimeout(this.timeout)
-      this.processTimeQueueSoon()
     }
+    this.processTimeQueueSoon()
   }
 
   processTimeQueueSoon () {
