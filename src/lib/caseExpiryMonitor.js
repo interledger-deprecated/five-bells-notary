@@ -3,7 +3,6 @@
 const moment = require('moment')
 const TimeQueue = require('./timeQueue')
 const NotificationWorker = require('./notificationWorker')
-const DB = require('./db')
 const Log = require('./log')
 const ExpiredCaseError = require('../errors/expired-case-error')
 const CaseFactory = require('../models/db/case')
@@ -11,11 +10,10 @@ const co = require('co')
 const knex = require('./knex')
 
 class CaseExpiryMonitor {
-  static constitute () { return [ TimeQueue, NotificationWorker, DB, Log, CaseFactory ] }
-  constructor (timeQueue, notificationWorker, db, log, Case) {
+  static constitute () { return [ TimeQueue, NotificationWorker, Log, CaseFactory ] }
+  constructor (timeQueue, notificationWorker, log, Case) {
     this.queue = timeQueue
     this.notificationWorker = notificationWorker
-    this.db = db
     this.log = log('caseExpiryMonitor')
     this.Case = Case
   }
