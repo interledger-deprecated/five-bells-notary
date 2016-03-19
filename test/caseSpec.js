@@ -265,6 +265,18 @@ describe('Cases', function () {
       yield notificationWorker.processNotificationQueue()
 
       putNotification.done()
+
+      yield this.request()
+        .get(exampleCase.id)
+        .expect(200)
+        .expect(_.assign({}, exampleCase, {
+          notaries: [
+            'http://localhost'
+          ]
+        }, {
+          state: 'rejected'
+        }))
+        .end()
     })
   })
 })
