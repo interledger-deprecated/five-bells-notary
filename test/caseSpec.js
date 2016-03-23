@@ -25,7 +25,7 @@ describe('Cases', function () {
   const Case = container.constitute(CaseFactory)
   logHelper(logger)
 
-  beforeEach(function *() {
+  beforeEach(function * () {
     appHelper.create(this, container)
 
     // knex initialize DB
@@ -42,7 +42,7 @@ describe('Cases', function () {
   })
 
   describe('GET /cases/:id', function () {
-    it('should return 200', function *() {
+    it('should return 200', function * () {
       yield this.request()
         .get(this.cases.simple.id)
         .expect(200)
@@ -50,7 +50,7 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should return 404 for a non-existent case', function *() {
+    it('should return 404 for a non-existent case', function * () {
       yield this.request()
         .get('/cases/da8e2a9f-fd41-4dda-99a9-87686a011f9a')
         .expect(404)
@@ -59,7 +59,7 @@ describe('Cases', function () {
   })
 
   describe('PUT /cases/:id', function () {
-    it('should return 201 when creating a case', function *() {
+    it('should return 201 when creating a case', function * () {
       yield this.request()
         .put(this.basicCase.id)
         .send(this.basicCase)
@@ -67,7 +67,17 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should return 422 if no notary is provided', function *() {
+    it('should return 400 when notaries format is invalid', function * () {
+      const caseInstance = _.clone(this.basicCase)
+      caseInstance.notaries = [{url: caseInstance.notaries[0]}]
+      yield this.request()
+        .put(this.basicCase.id)
+        .send(caseInstance)
+        .expect(400)
+        .end()
+    })
+
+    it('should return 422 if no notary is provided', function * () {
       this.basicCase.notaries = []
       yield this.request()
         .put(this.basicCase.id)
@@ -80,8 +90,8 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should return 422 if the incorrect notary is provided', function *() {
-      this.basicCase.notaries[0].url = 'http://example.com'
+    it('should return 422 if the incorrect notary is provided', function * () {
+      this.basicCase.notaries[0] = 'http://example.com'
       yield this.request()
         .put(this.basicCase.id)
         .send(this.basicCase)
@@ -95,7 +105,7 @@ describe('Cases', function () {
   })
 
   describe('PUT /cases/:id/fulfillment', function () {
-    it('should return 200 when fulfilling a case', function *() {
+    it('should return 200 when fulfilling a case', function * () {
       const exampleCase = this.cases.simple
 
       exampleCase.exec_cond_fulfillment = this.exampleFulfillment
@@ -109,7 +119,7 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should return 422 when a case is already rejected', function *() {
+    it('should return 422 when a case is already rejected', function * () {
       const exampleCase = this.cases.rejected
       yield this.request()
         .put(exampleCase.id + '/fulfillment')
@@ -122,7 +132,7 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should return 422 when a case has expired', function *() {
+    it('should return 422 when a case has expired', function * () {
       const exampleCase = this.cases.expired
       yield this.request()
         .put(exampleCase.id + '/fulfillment')
@@ -135,7 +145,7 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should return 422 when an invalid fulfillment is sent', function *() {
+    it('should return 422 when an invalid fulfillment is sent', function * () {
       const exampleCase = this.cases.simple
 
       exampleCase.exec_cond_fulfillment = this.exampleFulfillment
@@ -155,7 +165,7 @@ describe('Cases', function () {
         .end()
     })
 
-    it('should notify notification_targets when fulfilling a case', function *() {
+    it('should notify notification_targets when fulfilling a case', function * () {
       const exampleCase = this.cases.notification
 
       yield this.request()
@@ -187,7 +197,7 @@ describe('Cases', function () {
       putNotification.done()
     })
 
-    it('should retry failed notifications when fulfilling a case', function *() {
+    it('should retry failed notifications when fulfilling a case', function * () {
       const exampleCase = this.cases.other
 
       yield this.request()
@@ -235,7 +245,7 @@ describe('Cases', function () {
   })
 
   describe('case notifications', function () {
-    it('notifies on case expiration', function *() {
+    it('notifies on case expiration', function * () {
       const exampleCase = this.basicCase
       exampleCase.id = 'http://localhost/cases/75159fb1-8ed2-4c92-9af7-0f48e2616f48'
       exampleCase.expires_at = (new Date(Date.now() + 1000)).toISOString()
