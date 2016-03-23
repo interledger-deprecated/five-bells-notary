@@ -33,9 +33,9 @@ function CasesFactory (Case, log, db, notificationWorker, caseExpiryMonitor) {
 
       if (caseInstance.notaries.length !== 1) {
         throw new UnprocessableEntityError('The case must contain exactly one notary (this notary)')
-      } else if (caseInstance.notaries[0].url !== config.getIn(['server', 'base_uri'])) {
+      } else if (caseInstance.notaries[0] !== config.getIn(['server', 'base_uri'])) {
         throw new UnprocessableEntityError('The notary in the case must match this notary ' +
-            `(expected: "${config.getIn(['server', 'base_uri'])}", actual: '${caseInstance.notaries[0].url}')`)
+            `(expected: "${config.getIn(['server', 'base_uri'])}", actual: '${caseInstance.notaries[0]}')`)
       }
 
       // Combination of transaction / knex / sqlite3 doesn't seem to work,
@@ -46,7 +46,7 @@ function CasesFactory (Case, log, db, notificationWorker, caseExpiryMonitor) {
       if (knex.config.client === 'sqlite3') {
         yield dbAccess()
       } else {
-        yield knex.knex.transaction(co.wrap(function *(transaction) {
+        yield knex.knex.transaction(co.wrap(function * (transaction) {
           yield dbAccess(transaction)
         }))
       }
@@ -80,7 +80,7 @@ function CasesFactory (Case, log, db, notificationWorker, caseExpiryMonitor) {
         if (knex.config.client === 'sqlite3') {
           yield dbAccess()
         } else {
-          yield knex.knex.transaction(co.wrap(function *(transaction) {
+          yield knex.knex.transaction(co.wrap(function * (transaction) {
             yield dbAccess(transaction)
           }))
         }
