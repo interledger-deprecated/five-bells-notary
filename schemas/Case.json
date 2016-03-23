@@ -20,14 +20,7 @@
       "description": "Notaries (including this one) which are participating in this case",
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "$ref": "Iri.json"
-          }
-        },
-        "required": ["url"],
-        "additionalProperies": false
+        "$ref": "Iri.json"
       }
     },
     "notification_targets": {

@@ -10,7 +10,7 @@ const Container = require('constitute').Container
 const container = new Container()
 const logger = container.constitute(Log)
 
-beforeEach(function *() {
+beforeEach(function * () {
   appHelper.create(this, container)
 })
 
@@ -18,7 +18,7 @@ describe('Health', function () {
   logHelper(logger)
 
   describe('GET /health', function () {
-    it('should return 200', function *() {
+    it('should return 200', function * () {
       yield this.request()
         .get('/health')
         .expect(200)

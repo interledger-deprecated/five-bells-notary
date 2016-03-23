@@ -55,11 +55,7 @@ function CaseFactory (sequelize, uri, validator, container) {
       data.execution_condition = JSON.stringify(data.execution_condition)
       data.exec_cond_fulfillment = JSON.stringify(data.exec_cond_fulfillment)
       data.notification_targets = JSON.stringify(data.notification_targets)
-      // Massage notaries format
-      if (Array.isArray(data.notaries)) {
-        data.notaries = data.notaries[0]
-        if (data.notaries.url) data.notaries = data.notaries.url
-      }
+      data.notaries = data.notaries[0]
       return data
     }
   }
