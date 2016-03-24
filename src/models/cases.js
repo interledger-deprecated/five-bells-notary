@@ -46,7 +46,7 @@ function CasesFactory (Case, log, db, notificationWorker, caseExpiryMonitor) {
       if (knex.config.client === 'sqlite3') {
         yield dbAccess()
       } else {
-        yield knex.knex.transaction(co.wrap(function *(transaction) {
+        yield knex.knex.transaction(co.wrap(function * (transaction) {
           yield dbAccess(transaction)
         }))
       }
@@ -80,7 +80,7 @@ function CasesFactory (Case, log, db, notificationWorker, caseExpiryMonitor) {
         if (knex.config.client === 'sqlite3') {
           yield dbAccess()
         } else {
-          yield knex.knex.transaction(co.wrap(function *(transaction) {
+          yield knex.knex.transaction(co.wrap(function * (transaction) {
             yield dbAccess(transaction)
           }))
         }

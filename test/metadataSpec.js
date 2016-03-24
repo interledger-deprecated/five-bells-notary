@@ -9,7 +9,7 @@ const Container = require('constitute').Container
 const container = new Container()
 const logger = container.constitute(Log)
 
-beforeEach(function *() {
+beforeEach(function * () {
   appHelper.create(this, container)
 })
 
@@ -17,7 +17,7 @@ describe('Metadata', function () {
   logHelper(logger)
 
   describe('GET /', function () {
-    it('should return metadata', function *() {
+    it('should return metadata', function * () {
       yield this.request()
         .get('/')
         .expect(200)
