@@ -42,8 +42,9 @@ function CasesControllerFactory (Cases) {
     static * putResource () {
       const id = this.params.id.toLowerCase()
       request.validateUriParameter('id', id, 'Uuid')
-      this.body = yield Cases.putCase(id, this.body)
-      this.status = 201
+      const result = yield Cases.putCase(id, this.body)
+      this.body = result.caseData
+      this.status = result.existed ? 200 : 201
     }
 
     /**

@@ -47,7 +47,7 @@ class CaseExpiryMonitor {
 
         _this.log.debug('expired case: ' + caseId)
 
-        yield _this.notificationWorker.queueNotifications(caseInstance, {transaction})
+        yield _this.notificationWorker.queueNotifications(caseInstance, transaction)
       }
     }
     if (knex.config.client === 'sqlite3') {
