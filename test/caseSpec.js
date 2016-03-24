@@ -178,6 +178,26 @@ describe('Cases', function () {
         .end()
     })
 
+    it('should return 422 when an invalid fulfillment type is sent', function * () {
+      const exampleCase = this.cases.simple
+
+      exampleCase.exec_cond_fulfillment = this.exampleFulfillment
+      exampleCase.state = 'executed'
+
+      yield this.request()
+        .put(exampleCase.id + '/fulfillment')
+        .send({
+          type: 'ed25519-sha512',
+          message: 'foo'
+        })
+        .expect(422)
+        .expect({
+          id: 'UnmetConditionError',
+          message: 'Fulfillment type ed25519-sha512 does not match case execution type sha256'
+        })
+        .end()
+    })
+
     it('should notify notification_targets when fulfilling a case', function * () {
       const exampleCase = this.cases.notification
 
