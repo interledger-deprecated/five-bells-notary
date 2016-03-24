@@ -226,7 +226,7 @@ describe('Cases', function () {
       // Not ready to retry yet (backoff in effect)
       yield notificationWorker.processNotificationQueue()
       expect(putNotification2.isDone()).to.equal(false)
-      this.clock.tick(1501)
+      this.clock.tick(2501)
 
       // Success
       yield notificationWorker.processNotificationQueue()
