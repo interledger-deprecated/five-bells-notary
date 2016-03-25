@@ -77,6 +77,19 @@ describe('Cases', function () {
         .end()
     })
 
+    it('should return 200 when adding same case twice', function * () {
+      yield this.request()
+        .put(this.basicCase.id)
+        .send(this.basicCase)
+        .expect(201)
+        .end()
+      yield this.request()
+        .put(this.basicCase.id)
+        .send(this.basicCase)
+        .expect(200)
+        .end()
+    })
+
     it('should return 422 if no notary is provided', function * () {
       this.basicCase.notaries = []
       yield this.request()
@@ -236,7 +249,7 @@ describe('Cases', function () {
       // Not ready to retry yet (backoff in effect)
       yield notificationWorker.processNotificationQueue()
       expect(putNotification2.isDone()).to.equal(false)
-      this.clock.tick(1501)
+      this.clock.tick(2501)
 
       // Success
       yield notificationWorker.processNotificationQueue()
