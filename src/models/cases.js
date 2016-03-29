@@ -53,6 +53,9 @@ function CasesFactory (Case, log, notificationWorker, caseExpiryMonitor) {
         } else if (caseInstance.state === 'rejected') {
           throw new UnprocessableEntityError(
             'Case ' + caseId + ' is already rejected')
+        } else if (caseInstance.execution_condition.type !== fulfillment.type) {
+          throw new UnmetConditionError('Fulfillment type ' + fulfillment.type +
+          ' does not match case execution type ' + caseInstance.execution_condition.type)
         } else if (!Condition.testFulfillment(
             caseInstance.execution_condition, fulfillment)) {
           throw new UnmetConditionError('Invalid exec_cond_fulfillment')
