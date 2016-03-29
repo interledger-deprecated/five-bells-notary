@@ -43,7 +43,8 @@ module.exports = class App {
   }
 
   * _start () {
-    if (process.env.NOTARY_RUN_MIGRATION) {
+    const dbSync = config.getIn(['db', 'sync'])
+    if (dbSync) {
       yield knex.knex.migrate.rollback(knex.config)
       yield knex.knex.migrate.latest(knex.config)
     }
