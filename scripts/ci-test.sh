@@ -7,6 +7,12 @@ NODE_INDEX="$1"
 TOTAL_NODES="$2"
 ORACLE_DIR="$HOME/.oracle"
 
+# Workaround for
+# https://github.com/tgriesser/knex/commit/72c934a2d107f9ff7864b8b42bb843e31ad4e3bc
+testKnex() {
+  NOTARY_DB_URI="$1" node -e "require('./src/lib/knex'); process.exit()" | if grep -q "Error: Cannot find module";then exit 1;fi
+}
+
 lint() {
   npm run lint
 }
@@ -24,26 +30,32 @@ dockerBuild() {
 }
 
 mysqltest() {
+  local dbUri="mysql://ubuntu@localhost/circle_test"
+  testKnex $dbUri
   mysql -u ubuntu -e 'DROP DATABASE circle_test;'
   mysql -u ubuntu -e 'CREATE DATABASE circle_test;'
   docker run --name=notary-test-mysql -it --net=host \
-    -e NOTARY_UNIT_DB_URI=mysql://ubuntu@localhost/circle_test \
+    -e NOTARY_UNIT_DB_URI="$dbUri"\
     interledger/five-bells-notary npm test
 }
 
 postgrestest() {
+  local dbUri="postgres://ubuntu@localhost/circle_test"
+  testKnex $dbUri
   psql -U ubuntu -c 'DROP DATABASE circle_test;'
   psql -U ubuntu -c 'CREATE DATABASE circle_test;'
   docker run --name=notary-test-postgres -it --net=host \
-    -e NOTARY_UNIT_DB_URI=postgres://ubuntu@localhost/circle_test \
+    -e NOTARY_UNIT_DB_URI=$dbUri \
     interledger/five-bells-notary npm test
 }
 
 sqlitetest() {
+  local dbUri="sqlite://"
+  testKnex $dbUri
   # Run tests with coverage (SQLite)
   mkdir coverage
   docker run --name=notary-test-sqlite -it --net=host \
-    -e NOTARY_UNIT_DB_URI=sqlite:// \
+    -e NOTARY_UNIT_DB_URI=$dbUri \
     -e XUNIT_FILE=coverage/xunit.xml \
     -v "$PWD"/coverage:/usr/src/app/coverage \
     interledger/five-bells-notary sh -c 'npm test --coverage -- -R spec-xunit-file'
@@ -84,7 +96,10 @@ oracletest() {
     exit 1
   fi
 
-  LEDGER_UNIT_DB_URI='oracle://system:oracle@localhost:49161/' \
+  local dbUri="oracle://system:oracle@localhost:49161/"
+  testKnex $dbUri
+
+  NOTARY_UNIT_DB_URI=$dbUri \
     LD_LIBRARY_PATH=/opt/oracle/instantclient \
     npm test
 }
