@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 uploadCoverage() {
   # On parallel builds, only run coverage command on the container that ran the
