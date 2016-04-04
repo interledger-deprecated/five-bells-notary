@@ -7,7 +7,6 @@ const errorHandler = require('five-bells-shared/middlewares/error-handler')
 const Validator = require('five-bells-shared').Validator
 const config = require('./config')
 const Router = require('./router')
-const DB = require('./db')
 const Log = require('./log')
 const NotificationWorker = require('./notificationWorker')
 const TimerWorker = require('./timerWorker')
@@ -15,11 +14,10 @@ const knex = require('./knex')
 const path = require('path')
 
 module.exports = class App {
-  static constitute () { return [ Router, Validator, DB, Log, NotificationWorker, TimerWorker ] }
-  constructor (router, validator, db, log, notificationWorker, timerWorker) {
+  static constitute () { return [ Router, Validator, Log, NotificationWorker, TimerWorker ] }
+  constructor (router, validator, log, notificationWorker, timerWorker) {
     this.router = router
     this.validator = validator
-    this.db = db
     this.log = log('app')
     this.notificationWorker = notificationWorker
     this.timerWorker = timerWorker

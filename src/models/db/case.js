@@ -5,15 +5,14 @@ module.exports = CaseFactory
 const Container = require('constitute').Container
 const Model = require('five-bells-shared').Model
 const UriManager = require('../../lib/uri')
-const Database = require('../../lib/db')
 const config = require('../../lib/config')
 const PersistentKnexModelMixin = require('five-bells-shared').PersistentKnexModelMixin
 const Validator = require('five-bells-shared/lib/validator')
 const knex = require('../../lib/knex').knex
 const moment = require('moment')
 
-CaseFactory.constitute = [Database, UriManager, Validator, Container]
-function CaseFactory (sequelize, uri, validator, container) {
+CaseFactory.constitute = [UriManager, Validator, Container]
+function CaseFactory (uri, validator, container) {
   class Case extends Model {
     static convertFromExternal (data) {
       // ID is optional on the incoming side
