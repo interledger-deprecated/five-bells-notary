@@ -2,10 +2,7 @@
   "simple": {
     "id": "http://localhost/cases/ba18fbe6-a520-40bd-b5ac-02c9ccebbbdb",
     "state": "proposed",
-    "execution_condition": {
-      "type": "sha256",
-      "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
-    },
+    "execution_condition": "cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7",
     "expires_at": "3015-11-20T08:52:40.000Z",
     "notaries": [
       "http://localhost"
@@ -15,10 +12,7 @@
   "other": {
     "id": "http://localhost/cases/66abf362-4aff-4982-9a5a-fb497b21594e",
     "state": "proposed",
-    "execution_condition": {
-      "type": "sha256",
-      "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
-    },
+    "execution_condition": "cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7",
     "expires_at": "3015-11-20T08:52:40.000Z",
     "notaries": [
       "http://localhost"
@@ -30,10 +24,7 @@
   "rejected": {
     "id": "http://localhost/cases/ba18fbe6-a520-40bd-b5ac-02c9ccebbbdc",
     "state": "rejected",
-    "execution_condition": {
-      "type": "sha256",
-      "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
-    },
+    "execution_condition": "cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7",
     "expires_at": "3015-11-20T08:52:40.000Z",
     "notaries": [
       "http://localhost"
@@ -43,10 +34,7 @@
   "expired": {
     "id": "http://localhost/cases/ba18fbe6-a520-40bd-b5ac-02c9ccebbbdd",
     "state": "proposed",
-    "execution_condition": {
-      "type": "sha256",
-      "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
-    },
+    "execution_condition": "cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7",
     "expires_at": "2015-06-15T23:59:00.000Z",
     "notaries": [
       "http://localhost"
@@ -56,10 +44,7 @@
   "notification": {
     "id": "http://localhost/cases/66abf362-4aff-4982-9a5a-fb497b21594a",
     "state": "proposed",
-    "execution_condition": {
-      "type": "sha256",
-      "digest": "50D858E0985ECC7F60418AAF0CC5AB587F42C2570A884095A9E8CCACD0F6545C"
-    },
+    "execution_condition": "cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7",
     "expires_at": "3015-11-20T08:52:40.000Z",
     "notaries": [
       "http://localhost"

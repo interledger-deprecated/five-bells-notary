@@ -1,9 +1,8 @@
 'use strict'
 
-const crypto = require('crypto')
+const cc = require('five-bells-condition')
 const co = require('co')
 const request = require('co-request')
-const tweetnacl = require('tweetnacl')
 const makeCaseAttestation = require('five-bells-shared/utils/makeCaseAttestation')
 const NotificationScheduler = require('five-bells-shared').NotificationScheduler
 const UriManager = require('./uri')
@@ -81,28 +80,25 @@ class NotificationWorker {
       let response = {}
 
       const stateAttestation = makeCaseAttestation(caseInstance.getDataExternal().id, caseInstance.state)
-      const stateHash = sha512(stateAttestation)
+      const stateAttestationBuffer = new Buffer(stateAttestation, 'utf8')
+
       this.log.info('attesting state ' + stateAttestation)
 
-      // Generate crypto condition fulfillment for case state
-      const stateAttestationSigned = {
-        type: 'ed25519-sha512',
-        signature: tweetnacl.util.encodeBase64(tweetnacl.sign.detached(
-          tweetnacl.util.decodeBase64(stateHash),
-          tweetnacl.util.decodeBase64(config.getIn(['keys', 'ed25519', 'secret']))
-        ))
-      }
+      const signatureCondition = new cc.Ed25519()
+      signatureCondition.sign(stateAttestationBuffer, new Buffer(config.getIn(['keys', 'ed25519', 'secret']), 'base64'))
+
+      const notaryCondition = new cc.PrefixSha256()
+      notaryCondition.setPrefix(stateAttestationBuffer)
+      notaryCondition.setSubfulfillment(signatureCondition)
 
       if (caseInstance.state === 'executed') {
-        response = {
-          type: 'and',
-          subfulfillments: [
-            stateAttestationSigned,
-            caseInstance.exec_cond_fulfillment
-          ]
-        }
+        const condition = new cc.ThresholdSha256()
+        condition.addSubfulfillment(notaryCondition)
+        condition.addSubfulfillmentUri(caseInstance.exec_cond_fulfillment)
+        condition.setThreshold(2)
+        response = condition.serializeUri()
       } else if (caseInstance.state === 'rejected') {
-        response = stateAttestationSigned
+        response = notaryCondition.serializeUri()
       } else {
         retry = false
         throw new Error('Tried to send notification for a case that is not yet finalized')
@@ -110,7 +106,6 @@ class NotificationWorker {
 
       const result = yield request(notification.notification_target, {
         method: 'put',
-        json: true,
         body: response
       })
       if (result.statusCode >= 400) {
@@ -129,10 +124,6 @@ class NotificationWorker {
       yield notification.destroy()
     }
   }
-}
-
-function sha512 (str) {
-  return crypto.createHash('sha512').update(str).digest('base64')
 }
 
 module.exports = NotificationWorker
