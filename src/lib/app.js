@@ -22,9 +22,13 @@ module.exports = class App {
     this.notificationWorker = notificationWorker
     this.timerWorker = timerWorker
 
+    const notarySchemaPath = path.join(__dirname, '/../../schemas')
+    const conditionSchemaPath =
+      path.resolve(path.dirname(require.resolve('five-bells-condition')), 'schemas')
+
     validator.loadSharedSchemas()
-    validator.loadSchemasFromDirectory(path.join(__dirname, '/../../schemas'))
-    validator.loadSchemasFromDirectory(path.join(__dirname, '/../../node_modules/five-bells-condition/schemas'))
+    validator.loadSchemasFromDirectory(notarySchemaPath)
+    validator.loadSchemasFromDirectory(conditionSchemaPath)
 
     const app = this.app = koa()
     app.use(logger({mag: log('http')}))
