@@ -1,5 +1,6 @@
 'use strict'
 
+const parse = require('co-body')
 const request = require('five-bells-shared/utils/request')
 const CasesFactory = require('../models/cases')
 CasesControllerFactory.constitute = [CasesFactory]
@@ -62,7 +63,7 @@ function CasesControllerFactory (Cases) {
      */
     static * putFulfillmentResource () {
       const id = this.params.id.toLowerCase()
-      this.body = yield Cases.fulfillCase(id, this.body.getData())
+      this.body = yield Cases.fulfillCase(id, yield parse.text(this))
       this.status = 200
     }
   }

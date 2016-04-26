@@ -7,7 +7,7 @@ const Log = require('../lib/log')
 const config = require('../lib/config')
 const NotificationWorker = require('../lib/notificationWorker')
 const CaseExpiryMonitor = require('../lib/caseExpiryMonitor')
-const Condition = require('five-bells-condition').Condition
+const cc = require('five-bells-condition')
 const UnprocessableEntityError = require('five-bells-shared').UnprocessableEntityError
 const UnmetConditionError = require('five-bells-shared').UnmetConditionError
 const NotFoundError = require('five-bells-shared').NotFoundError
@@ -53,12 +53,12 @@ function CasesFactory (Case, log, notificationWorker, caseExpiryMonitor) {
         } else if (caseInstance.state === 'rejected') {
           throw new UnprocessableEntityError(
             'Case ' + caseId + ' is already rejected')
-        } else if (caseInstance.execution_condition.type !== fulfillment.type) {
-          throw new UnmetConditionError('Fulfillment type ' + fulfillment.type +
-          ' does not match case execution type ' + caseInstance.execution_condition.type)
-        } else if (!Condition.testFulfillment(
-            caseInstance.execution_condition, fulfillment)) {
-          throw new UnmetConditionError('Invalid exec_cond_fulfillment')
+        } else {
+          try {
+            cc.validateFulfillment(fulfillment, caseInstance.execution_condition)
+          } catch (err) {
+            throw new UnmetConditionError('Invalid fulfillment: ' + err.toString())
+          }
         }
 
         caseExpiryMonitor.validateNotExpired(caseInstance)

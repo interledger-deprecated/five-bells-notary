@@ -4,9 +4,11 @@ const _ = require('lodash')
 const nock = require('nock')
 const expect = require('chai').expect
 const sinon = require('sinon')
+const cc = require('five-bells-condition')
 const Log = require('../src/lib/log')
 const CaseFactory = require('../src/models/db/case')
 const appHelper = require('./helpers/app')
+const conditionHelper = require('./helpers/condition')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const NotificationWorker = require('../src/lib/notificationWorker')
 const TimerWorker = require('../src/lib/timerWorker')
@@ -166,40 +168,18 @@ describe('Cases', function () {
 
       yield this.request()
         .put(exampleCase.id + '/fulfillment')
-        .send({
-          type: 'sha256',
-          message: 'foo'
-        })
+        .send('cf:0:ZXhlY2V0ZQ')
         .expect(422)
         .expect({
           id: 'UnmetConditionError',
-          message: 'Invalid exec_cond_fulfillment'
-        })
-        .end()
-    })
-
-    it('should return 422 when an invalid fulfillment type is sent', function * () {
-      const exampleCase = this.cases.simple
-
-      exampleCase.exec_cond_fulfillment = this.exampleFulfillment
-      exampleCase.state = 'executed'
-
-      yield this.request()
-        .put(exampleCase.id + '/fulfillment')
-        .send({
-          type: 'ed25519-sha512',
-          message: 'foo'
-        })
-        .expect(422)
-        .expect({
-          id: 'UnmetConditionError',
-          message: 'Fulfillment type ed25519-sha512 does not match case execution type sha256'
+          message: 'Invalid fulfillment: Error: Fulfillment does not match condition'
         })
         .end()
     })
 
     it('should notify notification_targets when fulfilling a case', function * () {
       const exampleCase = this.cases.notification
+      const executionCondition = conditionHelper.getExecutionCondition(exampleCase)
 
       yield this.request()
         .put(exampleCase.id + '/fulfillment')
@@ -210,17 +190,8 @@ describe('Cases', function () {
       const putNotification = nock('http://ledger.example')
         .log(logger('nock').info)
         .put('/transfers/123/fulfillment', (body) => {
-          // TODO Verify signature
-          const caseFulfillment = body.subfulfillments[0]
-          caseFulfillment.signature = ''
+          expect(cc.validateFulfillment(body, executionCondition)).to.be.true
 
-          expect(body).to.deep.equal({
-            type: 'and',
-            subfulfillments: [{
-              type: 'ed25519-sha512',
-              signature: ''
-            }, this.exampleFulfillment]
-          })
           return true
         })
         .reply(204)
@@ -232,6 +203,7 @@ describe('Cases', function () {
 
     it('should retry failed notifications when fulfilling a case', function * () {
       const exampleCase = this.cases.other
+      const executionCondition = conditionHelper.getExecutionCondition(exampleCase)
 
       yield this.request()
         .put(exampleCase.id + '/fulfillment')
@@ -245,17 +217,8 @@ describe('Cases', function () {
       const putNotification2 = nock('http://ledger.example')
         .log(logger('nock').info)
         .put('/transfers/123/fulfillment', (body) => {
-          // TODO Verify signature
-          const caseFulfillment = body.subfulfillments[0]
-          caseFulfillment.signature = ''
+          expect(cc.validateFulfillment(body, executionCondition)).to.be.true
 
-          expect(body).to.deep.equal({
-            type: 'and',
-            subfulfillments: [{
-              type: 'ed25519-sha512',
-              signature: ''
-            }, this.exampleFulfillment]
-          })
           return true
         })
         .reply(204)
@@ -283,6 +246,9 @@ describe('Cases', function () {
       exampleCase.id = 'http://localhost/cases/75159fb1-8ed2-4c92-9af7-0f48e2616f48'
       exampleCase.expires_at = (new Date(Date.now() + 1000)).toISOString()
       exampleCase.notification_targets = ['http://ledger.example/transfers/123/fulfillment']
+
+      const cancellationCondition = conditionHelper.getCancellationCondition(exampleCase)
+
       yield this.request()
         .put(exampleCase.id)
         .send(exampleCase)
@@ -291,8 +257,8 @@ describe('Cases', function () {
 
       const putNotification = nock('http://ledger.example')
         .put('/transfers/123/fulfillment', function (body) {
-          expect(body.type).to.equal('ed25519-sha512')
-          expect(body.signature).to.be.a('string')
+          expect(cc.validateFulfillment(body, cancellationCondition)).to.be.true
+
           return true
         })
         .reply(200)
