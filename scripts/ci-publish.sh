@@ -27,6 +27,6 @@ dockerPush() {
 }
 
 npmPublish
-uploadCoverage
+# ST: Coverage reporting is broken - disable for now
+#uploadCoverage
 dockerPush
-
