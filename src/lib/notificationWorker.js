@@ -33,10 +33,10 @@ class NotificationWorker {
 
   * queueNotifications (caseInstance, transaction) {
     this.log.debug('queueing notifications for case ' + caseInstance.id)
-    const notifications = caseInstance.notification_targets.map((notification_target) => {
+    const notifications = caseInstance.notification_targets.map((notificationTarget) => {
       const n = new this.Notification()
       n.case_id = caseInstance.id
-      n.notification_target = notification_target
+      n.notification_target = notificationTarget
       return n
     })
 
