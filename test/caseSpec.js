@@ -166,15 +166,17 @@ describe('Cases', function () {
       exampleCase.exec_cond_fulfillment = this.exampleFulfillment
       exampleCase.state = 'executed'
 
-      yield this.request()
+      const response = yield this.request()
         .put(exampleCase.id + '/fulfillment')
         .send('cf:0:ZXhlY2V0ZQ')
         .expect(422)
-        .expect({
-          id: 'UnmetConditionError',
-          message: 'Invalid fulfillment: Error: Fulfillment does not match condition'
-        })
         .end()
+
+      const errorString = 'Invalid fulfillment: Error: Fulfillment does not match condition' +
+                          ' (expected: cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7, ' +
+                          'actual: cc:0:3:nN793Gop06qyPccAIOCG_ROgIs5QghfQVU6fumRgyZ0:7)'
+      expect(response.body.id).to.equal('UnmetConditionError')
+      expect(response.body.message).to.equal(errorString)
     })
 
     it('should notify notification_targets when fulfilling a case', function * () {
