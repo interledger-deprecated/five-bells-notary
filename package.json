@@ -46,8 +46,7 @@
     "mag-hub": "^0.1.1",
     "moment": "^2.10.6",
     "mysql": "^2.9.0",
-    "priorityqueuejs": "^1.0.0",
-    "tweetnacl": "^0.13.2"
+    "priorityqueuejs": "^1.0.0"
   },
   "optionalDependencies": {
     "mysql": "^2.9.0",
