@@ -9,6 +9,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "start-prof": "node --prof --logfile=${NOTARY_V8_LOGFILE:-v8.log} app.js",
     "lint": "eslint src test *.js",
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
     "test": "istanbul test -- _mocha",
