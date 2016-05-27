@@ -14,11 +14,11 @@ uploadCoverage() {
   fi
 }
 
-npmPublish() {
+publishNpm() {
   npm run ci-npm-publish
 }
 
-dockerPush() {
+pushDocker() {
   # Push Docker image tagged latest and tagged with commit descriptor
   sed "s/<AUTH>/${DOCKER_TOKEN}/" < "dockercfg-template" > ~/.dockercfg
   docker tag interledger/five-bells-notary:latest interledger/five-bells-notary:"$(git describe)"
@@ -26,7 +26,12 @@ dockerPush() {
   docker push interledger/five-bells-notary:"$(git describe)"
 }
 
-npmPublish
+updateWebsite() {
+  node scripts/publish_web.js
+}
+
+publishNpm
 # ST: Coverage reporting is broken - disable for now
 #uploadCoverage
-dockerPush
+pushDocker
+updateWebsite
