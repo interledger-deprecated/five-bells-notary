@@ -57,6 +57,10 @@ function CaseFactory (uri, validator, container) {
       data.notaries = data.notaries[0]
       return data
     }
+
+    isFinalized () {
+      return this.state === 'executed' || this.state === 'rejected'
+    }
   }
 
   Case.validateExternal = validator.create('Case')

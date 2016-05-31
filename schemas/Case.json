@@ -1,4 +1,4 @@
-  {
+{
   "$schema": "http://json-schema.org/draft-04/schema",
   "title": "Case",
   "description": "A specific binary decision to be notarized",
