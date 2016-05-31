@@ -3,3 +3,5 @@ node_modules/
 *.db
 /integration-test
 *v8.log
+/web/
+/apidoc-out/
