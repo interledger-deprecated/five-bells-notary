@@ -117,6 +117,19 @@ describe('Cases', function () {
         })
         .end()
     })
+
+    it('should return 422 if the case is already expired', function * () {
+      const exampleCase = this.cases.expired
+      yield this.request()
+        .put(exampleCase.id)
+        .send(exampleCase)
+        .expect(422)
+        .expect({
+          id: 'ExpiredCaseError',
+          message: 'Cannot create or modify case after expires_at date'
+        })
+        .end()
+    })
   })
 
   describe('PUT /cases/:id/fulfillment', function () {
@@ -155,7 +168,7 @@ describe('Cases', function () {
         .expect(422)
         .expect({
           id: 'ExpiredCaseError',
-          message: 'Cannot modify case after expires_at date'
+          message: 'Cannot create or modify case after expires_at date'
         })
         .end()
     })
