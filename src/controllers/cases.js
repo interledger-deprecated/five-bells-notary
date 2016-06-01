@@ -1,7 +1,7 @@
 'use strict'
 
 const parse = require('co-body')
-const CasesFactory = require('../models/cases')
+const CasesFactory = require('../models/cases').CasesFactory
 const Validator = require('five-bells-shared').Validator
 
 CasesControllerFactory.constitute = [CasesFactory, Validator]
@@ -44,7 +44,7 @@ function CasesControllerFactory (Cases, validator) {
     static * putResource () {
       const id = this.params.id.toLowerCase()
       validator.validateUriParameter('id', id, 'Uuid')
-      const result = yield Cases.putCase(id, this.body)
+      const result = yield Cases.putCase(this.body)
       this.body = result.caseData
       this.status = result.existed ? 200 : 201
     }

@@ -30,7 +30,6 @@ function parseDatabaseType (uri) {
 function getKnexConfig () {
   const knexConfig = {
     sqlite: {client: 'sqlite3'},
-    mysql: {client: 'mysql'},
     postgres: {client: 'pg'},
     oracle: {
       client: 'strong-oracle',
@@ -52,13 +51,8 @@ function getKnexConfig () {
   return _.assign(commonConfig, knexConfig[databaseType])
 }
 
-const knex = require('knex')(getKnexConfig())
+const knexConfig = getKnexConfig()
+const knex = require('knex')(knexConfig)
 
 module.exports.knex = knex
-module.exports.config = {
-  directory: path.join(__dirname, '../../migrations'),
-  // this table will be populated with some information about your
-  // migration files.  it will be automatically created, if it
-  // doesn't already exist.
-  tableName: 'migrations'
-}
+module.exports.config = knexConfig

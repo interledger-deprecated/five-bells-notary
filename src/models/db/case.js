@@ -1,72 +1,136 @@
 'use strict'
 
-module.exports = CaseFactory
-
-const Container = require('constitute').Container
-const Model = require('five-bells-shared').Model
-const UriManager = require('../../lib/uri')
-const config = require('../../lib/config')
-const PersistentKnexModelMixin = require('five-bells-shared').PersistentKnexModelMixin
-const Validator = require('five-bells-shared/lib/validator')
 const knex = require('../../lib/knex').knex
-const moment = require('moment')
+const _ = require('lodash')
+const co = require('co')
+const assert = require('assert')
+const getStatusId = require('./caseStatus').getStatusId
+const getStatusName = require('./caseStatus').getStatusName
 
-CaseFactory.constitute = [UriManager, Validator, Container]
-function CaseFactory (uri, validator, container) {
-  class Case extends Model {
-    static convertFromExternal (data) {
-      // ID is optional on the incoming side
-      if (data.id) {
-        data.id = uri.parse(data.id, 'case').id.toLowerCase()
-      }
+const TABLE_NAME = 'N_CASES'
 
-      data.expires_at = new Date(data.expires_at)
+function getTransaction (options) {
+  return !options ? knex : (!options.transaction ? knex : options.transaction)
+}
 
-      return data
-    }
+function transaction (callback) {
+  return knex.transaction(co.wrap(callback))
+}
 
-    static convertToExternal (data) {
-      data.id = uri.make('case', data.id.toLowerCase())
-      data.notaries = [config.getIn(['server', 'base_uri'])]
-      data.expires_at = moment(data.expires_at).toISOString() // format('YYYY-MM-DD HH:mm:ss');
-      delete data.Notaries
-      if (!data.exec_cond_fulfillment) {
-        delete data.exec_cond_fulfillment
-      }
-      return data
-    }
-
-    static convertFromPersistent (data) {
-      data.execution_condition = JSON.parse(data.execution_condition)
-      if (data.exec_cond_fulfillment) {
-        data.exec_cond_fulfillment = JSON.parse(data.exec_cond_fulfillment)
-      }
-      data.notification_targets = JSON.parse(data.notification_targets)
-      delete data.created_at
-      delete data.updated_at
-      if (!Array.isArray(data.notaries)) {
-        data.notaries = [ data.notaries ]
-      }
-      return data
-    }
-
-    static convertToPersistent (data) {
-      data.execution_condition = JSON.stringify(data.execution_condition)
-      data.exec_cond_fulfillment = JSON.stringify(data.exec_cond_fulfillment)
-      data.notification_targets = JSON.stringify(data.notification_targets)
-      data.notaries = data.notaries[0]
-      return data
-    }
-
-    isFinalized () {
-      return this.state === 'executed' || this.state === 'rejected'
-    }
+function * insertCases (caseObjects, options) {
+  if (caseObjects.length <= 0) {
+    return
   }
+  return getTransaction(options)(TABLE_NAME)
+  .insert(_.map(caseObjects, convertToPersistent)).then()
+}
 
-  Case.validateExternal = validator.create('Case')
-  Case.tableName = 'cases'
+function insertCase (caseObject, options) {
+  return getTransaction(options)(TABLE_NAME)
+    .insert(convertToPersistent(caseObject))
+    .then()
+}
 
-  PersistentKnexModelMixin(Case, knex)
+function updateCase (caseObject, options) {
+  assert(caseObject.primary_key, 'Cannot update a case without a primary key: ' +
+    JSON.stringify(caseObject))
+  return getTransaction(options)(TABLE_NAME).update(convertToPersistent(caseObject))
+  .where('CASE_ID', caseObject.primary_key)
+  .then()
+}
 
-  return Case
+function * _upsertCase (caseData, options) {
+  assert(options.transaction)
+  const existingCase = yield getCaseByUuid(caseData.id, options)
+  if (existingCase) {
+    yield updateCase(_.merge({}, existingCase, caseData), options)
+  } else {
+    yield insertCase(caseData, options)
+  }
+  return Boolean(existingCase)
+}
+
+function * upsertCase (caseData, options) {
+  if (options && options.transaction) {
+    return yield _upsertCase(caseData, options)
+  } else {
+    let result
+    yield transaction(function * (transaction) {
+      result = yield _upsertCase(caseData,
+        _.assign({}, options || {}, {transaction}))
+    })
+    return result
+  }
+}
+
+function getByKey (key, value, options) {
+  return getTransaction(options)
+    .from(TABLE_NAME)
+    .select()
+    .where(key, value)
+    .then((results) => results.map(convertFromPersistent))
+    .then((results) => {
+      if (results.length === 1) {
+        return results[0]
+      } else if (results.length === 0) {
+        return null
+      } else {
+        assert(false,
+          results.length + ' cases with ' + key + ':' + value)
+      }
+    })
+}
+
+function getCaseByPrimaryKey (primaryKey, options) {
+  return getByKey('CASE_ID', primaryKey, options)
+}
+
+function getCaseByUuid (caseUuid, options) {
+  return getByKey('UUID', caseUuid, options)
+}
+
+function convertFromPersistent (data) {
+  const statusName = getStatusName(data.STATUS_ID)
+  const caseObject = {
+    primary_key: data.CASE_ID,
+    id: data.UUID,
+    execution_condition: data.EXECUTION_CONDITION_DIGEST,
+    expires_at: data.EXPIRES_DTTM,
+    notification_targets: JSON.parse(data.NOTIFICATION_TARGETS),
+    state: statusName
+  }
+  if (!Array.isArray(data.NOTARIES)) {
+    caseObject.notaries = [ data.NOTARIES ]
+  }
+  if (data.EXEC_COND_FULFILLMENT) {
+    caseObject.exec_cond_fulfillment = data.EXEC_COND_FULFILLMENT
+  }
+  return caseObject
+}
+
+function convertToPersistent (data) {
+  const statusId = getStatusId(data.state)
+  const persistentCase = {
+    UUID: data.id,
+    STATUS_ID: statusId,
+    EXECUTION_CONDITION_DIGEST: data.execution_condition,
+    EXEC_COND_FULFILLMENT: data.exec_cond_fulfillment,
+    EXPIRES_DTTM: data.expires_at,
+    NOTARIES: data.notaries[0],
+    NOTIFICATION_TARGETS: JSON.stringify(data.notification_targets)
+  }
+  if (data.primary_key) {
+    persistentCase.CASE_ID = data.primary_key
+  }
+  return persistentCase
+}
+
+module.exports = {
+  getCaseByUuid,
+  getCaseByPrimaryKey,
+  insertCases,
+  insertCase,
+  updateCase,
+  upsertCase,
+  transaction
 }

@@ -29,16 +29,6 @@ dockerBuild() {
   docker build -t interledger/five-bells-notary .
 }
 
-mysqltest() {
-  local dbUri="mysql://ubuntu@localhost/circle_test"
-  testKnex $dbUri
-  mysql -u ubuntu -e 'DROP DATABASE circle_test;'
-  mysql -u ubuntu -e 'CREATE DATABASE circle_test;'
-  docker run --name=notary-test-mysql -it --net=host \
-    -e NOTARY_UNIT_DB_URI="$dbUri"\
-    interledger/five-bells-notary npm test
-}
-
 postgrestest() {
   local dbUri="postgres://ubuntu@localhost/circle_test"
   testKnex $dbUri
@@ -67,18 +57,21 @@ sqlitetest() {
 oracletest() {
   # Install Oracle
   docker pull wnameless/oracle-xe-11g
-  docker run -d -p 49160:22 -p 49161:1521 wnameless/oracle-xe-11g
+  docker run -d -p 49160:22 -p 1521:1521 wnameless/oracle-xe-11g
   # Download and unzip Oracle library
   mkdir -p "$ORACLE_DIR"
 
   local clientSDK="instantclient-sdk-linux.x64-12.1.0.2.0.zip"
+  local sqlplusZip="instantclient-sqlplus-linux.x64-12.1.0.2.0.zip"
   if [ ! -f "$ORACLE_DIR/$clientSDK" ]; then
     (
     cd "$ORACLE_DIR" || exit 1
 
     aws s3 cp s3://ilp-server-ci-files/"$clientSDK" .
+    aws s3 cp s3://ilp-server-ci-files/"$sqlplusZip" .
     aws s3 cp s3://ilp-server-ci-files/instantclient-basic-linux.x64-12.1.0.2.0.zip .
     unzip $clientSDK
+    unzip $sqlplusZip
     unzip instantclient-basic-linux.x64-12.1.0.2.0.zip
     # Need symlinks from .so.12.1 to .so
     ln -s libocci.so.12.1 instantclient_12_1/libocci.so
@@ -97,7 +90,7 @@ oracletest() {
     exit 1
   fi
 
-  local dbUri="oracle://system:oracle@localhost:49161/"
+  local dbUri="oracle://system:oracle@localhost:1521/"
   testKnex $dbUri
 
   NOTARY_UNIT_DB_URI=$dbUri \
@@ -111,7 +104,6 @@ oneNode() {
   dockerBuild
   sqlitetestest
   integrationtest
-  mysqltest
   postgrestest
   oracletest
   apidoc
@@ -119,7 +111,7 @@ oneNode() {
 
 twoNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest integrationtest; mysqltest;;
+    0) lint; dockerBuild; sqlitetest integrationtest;;
     1) dockerBuild; oracletest; postgrestest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -128,7 +120,7 @@ twoNodes() {
 threeNodes() {
   case "$NODE_INDEX" in
     0) lint; dockerBuild; sqlitetest integrationtest;;
-    1) dockerBuild; postgrestest; mysqltest;;
+    1) dockerBuild; postgrestest;;
     2) dockerBuild; oracletest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -138,7 +130,7 @@ fourNodes() {
   case "$NODE_INDEX" in
     0) dockerBuild; sqlitetest; postgrestest;;
     1) integrationtest;;
-    2) lint; dockerBuild; mysqltest; apidoc;;
+    2) lint; dockerBuild; apidoc;;
     3) oracletest;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
