@@ -37,6 +37,37 @@
     "groupTitle": "Case"
   },
   {
+    "type": "post",
+    "url": "/cases/:id/targets",
+    "title": "Add a notification target",
+    "name": "PostCaseTarget",
+    "group": "Case",
+    "version": "1.0.0",
+    "description": "<p>Add an additional notification target to an existing case</p>",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "id",
+            "description": "<p>UUID of the case</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "JSON",
+            "optional": false,
+            "field": "body",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "filename": "src/controllers/cases.js",
+    "groupTitle": "Case"
+  },
+  {
     "type": "put",
     "url": "/cases/:id",
     "title": "Create a new case",
