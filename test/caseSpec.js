@@ -242,6 +242,36 @@ describe('Cases', function () {
     })
   })
 
+  describe('POST /cases/:id/targets', function () {
+    it('should return 200 when successfully adding a new target', function * () {
+      const exampleCase = this.cases.other
+
+      yield this.request()
+        .post(exampleCase.id + '/targets')
+        .send(['http://new.example'])
+        .expect(200)
+        .expect(Object.assign({}, exampleCase, {
+          notification_targets: [
+            'http://ledger.example/transfers/123/fulfillment',
+            'http://new.example'
+          ]
+        }))
+        .end()
+    })
+
+    it('should return 400 when an invalid target is supplied', function * () {
+      const exampleCase = this.cases.other
+
+      const response = yield this.request()
+        .post(exampleCase.id + '/targets')
+        .send({foo: 'bar'})
+        .expect(400)
+        .end()
+
+      expect(response.body.id).to.equal('InvalidBodyError')
+    })
+  })
+
   describe('case notifications', function () {
     it('notifies on case expiration', function * () {
       const exampleCase = this.basicCase

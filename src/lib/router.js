@@ -24,6 +24,7 @@ module.exports = class Router {
     this.router.get('/cases/:id', cases.getResource)
     this.router.put('/cases/:id', CaseModel.createBodyParser(), cases.putResource)
     this.router.put('/cases/:id/fulfillment', cases.putFulfillmentResource)
+    this.router.post('/cases/:id/targets', cases.postNotificationTargetResource)
   }
 
   attach (app) {

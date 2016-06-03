@@ -72,5 +72,24 @@ function CasesFactory (Case, log, notificationWorker, caseExpiryMonitor) {
         return caseInstance.getDataExternal()
       })
     }
+
+    static * addNotificationTarget (caseId, targetUris) {
+      return yield db.transaction(function * (transaction) {
+        const caseInstance = yield db.getCase(Case, caseId, {transaction})
+        if (!caseInstance) {
+          throw new UnprocessableEntityError('Unknown case ID ' + caseId)
+        } else if (caseInstance.isFinalized()) {
+          throw new UnprocessableEntityError(
+            'Case ' + caseId + ' is already finalized')
+        }
+
+        caseInstance.notification_targets =
+          caseInstance.notification_targets.concat(targetUris)
+
+        yield db.updateCase(caseInstance, {transaction})
+
+        return caseInstance.getDataExternal()
+      })
+    }
   }
 }
