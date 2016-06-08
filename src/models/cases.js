@@ -26,6 +26,7 @@ function CasesFactory (Case, log, notificationWorker, caseExpiryMonitor) {
     }
 
     static * putCase (caseId, caseInstance) {
+      caseExpiryMonitor.validateNotExpired(caseInstance)
       caseInstance.id = caseId
       caseInstance.state = 'proposed'
 

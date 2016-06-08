@@ -21,7 +21,7 @@ class CaseExpiryMonitor {
   validateNotExpired (caseInstance) {
     if (caseInstance.expires_at &&
       moment().isAfter(caseInstance.expires_at)) {
-      throw new ExpiredCaseError('Cannot modify case ' +
+      throw new ExpiredCaseError('Cannot create or modify case ' +
         'after expires_at date')
     }
   }
