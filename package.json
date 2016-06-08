@@ -16,7 +16,7 @@
     "test-oracle": "NOTARY_UNIT_DB_URI='oracle://system:oracle@192.168.99.100:49161/' DYLD_LIBRARY_PATH=/opt/oracle/instantclient LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
     "bump": "version-bump",
     "integration": "integration all",
-    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "report-coverage": "codecov",
     "ci-npm-publish": "ci-publish"
   },
   "keywords": [
@@ -60,6 +60,7 @@
     "chai": "^3.4.1",
     "co-mocha": "^1.1.2",
     "co-supertest": "0.0.10",
+    "codecov": "^1.0.1",
     "coveralls": "^2.11.9",
     "eslint": "^2.0.0",
     "eslint-config-standard": "^5.1.0",

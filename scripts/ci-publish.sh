@@ -1,19 +1,5 @@
 #!/bin/bash -e
 
-uploadCoverage() {
-  # On parallel builds, only run coverage command on the container that ran the
-  # SQLite tests with coverage
-  if [ -d coverage ]; then
-    # Extract test results
-    cp coverage/xunit.xml "${CIRCLE_TEST_REPORTS}/"
-
-    # Upload coverage data
-    docker run --volumes-from notary-test-sqlite \
-      -e COVERALLS_REPO_TOKEN="${COVERALLS_REPO_TOKEN}" \
-      interledger/five-bells-notary npm run coveralls
-  fi
-}
-
 publishNpm() {
   npm run ci-npm-publish
 }
@@ -31,7 +17,5 @@ updateWebsite() {
 }
 
 publishNpm
-# ST: Coverage reporting is broken - disable for now
-#uploadCoverage
 pushDocker
 updateWebsite

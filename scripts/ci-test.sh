@@ -53,14 +53,15 @@ sqlitetest() {
   local dbUri="sqlite://"
   testKnex $dbUri
   # Run tests with coverage (SQLite)
-  mkdir coverage
-  docker run --name=notary-test-sqlite -it --net=host \
-    -e NOTARY_UNIT_DB_URI=$dbUri \
-    -e XUNIT_FILE=coverage/xunit.xml \
-    -v "$PWD"/coverage:/usr/src/app/coverage \
-    interledger/five-bells-notary sh -c 'npm test --coverage -- -R spec-xunit-file'
+  NOTARY_UNIT_DB_URI=$dbUri \
+  XUNIT_FILE=coverage/xunit.xml \
+  npm test --coverage -- -R spec-xunit-file
+
   # Extract test results
   cp coverage/xunit.xml "${CIRCLE_TEST_REPORTS}/"
+
+  # Upload coverage results
+  npm run report-coverage
 }
 
 oracletest() {
@@ -91,7 +92,7 @@ oracletest() {
 
   npm i strong-oracle
   # Check for node_modules/strong-oracle explicitly because even if installation of it fails, npm doesn't catch it.
-  if [[ ! -d node_modules/strong-oracle ]]; then 
+  if [[ ! -d node_modules/strong-oracle ]]; then
     echo 'node_modules/strong-oracle is not there, return error.'
     exit 1
   fi
