@@ -10,7 +10,8 @@ const Router = require('./router')
 const Log = require('./log')
 const NotificationWorker = require('./notificationWorker')
 const TimerWorker = require('./timerWorker')
-const knex = require('./knex')
+const createTables = require('./db').createTables
+const readLookupTables = require('./readLookupTables').readLookupTables
 const path = require('path')
 
 module.exports = class App {
@@ -47,9 +48,9 @@ module.exports = class App {
   * _start () {
     const dbSync = config.getIn(['db', 'sync'])
     if (dbSync) {
-      yield knex.knex.migrate.rollback(knex.config)
-      yield knex.knex.migrate.latest(knex.config)
+      yield createTables()
     }
+    yield readLookupTables()
     this.notificationWorker.start()
     this.timerWorker.start()
     this.listen()

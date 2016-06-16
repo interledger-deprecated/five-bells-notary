@@ -1,12 +1,8 @@
 'use strict'
 
-const BaseUriManager = require('five-bells-shared').UriManager
+const UriManager = require('five-bells-shared/lib/uri-manager').UriManager
 const config = require('./config')
 
-module.exports = class UriManager extends BaseUriManager {
-  constructor () {
-    super(config.getIn(['server', 'base_uri']))
+const uri = module.exports = new UriManager(config.getIn(['server', 'base_uri']))
 
-    this.addResource('case', '/cases/:id')
-  }
-}
+uri.addResource('case', '/cases/:id')

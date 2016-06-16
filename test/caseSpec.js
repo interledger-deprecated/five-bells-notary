@@ -6,7 +6,8 @@ const expect = require('chai').expect
 const sinon = require('sinon')
 const cc = require('five-bells-condition')
 const Log = require('../src/lib/log')
-const CaseFactory = require('../src/models/db/case')
+const persistentCase = require('../src/models/db/case')
+const convertFromExternal = require('../src/models/cases').convertFromExternal
 const appHelper = require('./helpers/app')
 const conditionHelper = require('./helpers/condition')
 const logHelper = require('five-bells-shared/testHelpers/log')
@@ -16,7 +17,7 @@ const TimerWorker = require('../src/lib/timerWorker')
 const Container = require('constitute').Container
 const container = new Container()
 
-const knex = require('../src/lib/knex')
+const dbHelper = require('./helpers/db')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -24,20 +25,26 @@ describe('Cases', function () {
   const logger = container.constitute(Log)
   const notificationWorker = container.constitute(NotificationWorker)
   const timerWorker = container.constitute(TimerWorker)
-  const Case = container.constitute(CaseFactory)
   logHelper(logger)
+
+  before(function * () {
+    yield dbHelper.init()
+  })
+
+  after(function * () {
+    yield dbHelper.drop()
+  })
 
   beforeEach(function * () {
     appHelper.create(this, container)
-
-    // knex initialize DB
-    yield knex.knex.migrate.rollback(knex.config)
-    yield knex.knex.migrate.latest(knex.config)
+    yield dbHelper.clean()
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     this.cases = _.cloneDeep(require('./data/cases'))
-    yield Case.bulkCreateExternal(_.values(this.cases))
+    const caseObjects = _.mapValues(this.cases, convertFromExternal)
+
+    yield persistentCase.insertCases(caseObjects)
 
     this.basicCase = _.cloneDeep(require('./data/basicCase'))
     this.exampleFulfillment = _.cloneDeep(require('./data/exampleFulfillment'))

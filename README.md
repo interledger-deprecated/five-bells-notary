@@ -22,17 +22,19 @@ Of course, now the transactional semantics depend on safety and liveness of the 
 To run with sqlite,
 
 ```
-npm install
-npm install sqlite3
-npm start
+NOTARY_DB_SYNC=1 NOTARY_DB_URI=sqlite://:memory: npm start
 ```
 
-To run with Oracle, first, install Oracle Instant Client, e.g, in /opt/oracle/instantclient.
+To run with postgres, create a database, then
 
 ```
-npm install
-npm install strong-oracle
-NOTARY_DB_ENV=oracledev DYLD_LIBRARY_PATH='/opt/oracle/instantclient' npm start
+NOTARY_DB_SYNC=1 NOTARY_UNIT_DB_URI=postgres://user:password@host:port/db_name npm start
 ```
 
-To create database tables before running, set environment variable NOTARY_RUN_MIGRATION on ```npm start```.
+To run with Oracle, first, install [Oracle Instant Client](http://www.oracle.com/technetwork/database/features/instant-client/index-097480.html), e.g, in /opt/oracle/instantclient. Then run an Oracle database in a docker container ([example](https://github.com/wnameless/docker-oracle-xe-11g)), and specify `NOTARY_DB_URI`:
+
+```
+NOTARY_DB_SYNC=1 NOTARY_DB_URI='oracle://user:password@docker-machine-ip:port/' DYLD_LIBRARY_PATH=/opt/oracle/instantclient LD_LIBRARY_PATH=/opt/oracle/instantclient npm start
+```
+
+`NOTARY_DB_SYNC` is a test setting that creates the database by running the SQL scripts in `./src/sql`. These scripts are not re-runnable. You must drop the database or set `NOTARY_DB_SYNC=0` after the initial run.

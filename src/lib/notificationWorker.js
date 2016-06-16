@@ -5,23 +5,22 @@ const co = require('co')
 const request = require('co-request')
 const makeCaseAttestation = require('five-bells-shared/utils/makeCaseAttestation')
 const NotificationScheduler = require('five-bells-shared').NotificationScheduler
-const UriManager = require('./uri')
 const Log = require('./log')
 const config = require('./config')
-const NotificationFactory = require('../models/db/notification')
-const CaseFactory = require('../models/db/case')
-const knex = require('../lib/knex').knex
+const getCaseByPrimaryKey = require('../models/db/case').getCaseByPrimaryKey
+const updateNotification = require('../models/db/notification').updateNotification
+const insertNotifications = require('../models/db/notification').insertNotifications
+const convertToExternal = require('../models/cases').convertToExternal
+const notificationDAO = require('../models/db/notification')
+const _ = require('lodash')
 
 class NotificationWorker {
-  static constitute () { return [ UriManager, Log, NotificationFactory, CaseFactory ] }
-  constructor (uri, log, Notification, Case) {
-    this.uri = uri
+  static constitute () { return [ Log ] }
+  constructor (log) {
     this.log = log('notificationWorker')
-    this.Notification = Notification
-    this.Case = Case
 
     this.scheduler = new NotificationScheduler({
-      Notification, knex,
+      notificationDAO,
       log: log('notificationScheduler'),
       processNotification: this.processNotification.bind(this)
     })
@@ -34,13 +33,15 @@ class NotificationWorker {
   * queueNotifications (caseInstance, transaction) {
     this.log.debug('queueing notifications for case ' + caseInstance.id)
     const notifications = caseInstance.notification_targets.map((notificationTarget) => {
-      const n = new this.Notification()
-      n.case_id = caseInstance.id
-      n.notification_target = notificationTarget
-      return n
+      return {
+        case_id: caseInstance.primary_key,
+        notification_target: notificationTarget,
+        state: 'pending',
+        is_active: true
+      }
     })
 
-    yield this.Notification.bulkCreate(notifications, { transaction })
+    yield insertNotifications(notifications, {transaction})
 
     // We will schedule an immediate attempt to send the notification for
     // performance in the good case.
@@ -54,10 +55,8 @@ class NotificationWorker {
   }
 
   * processNotification (notification) {
-    notification = this.Notification.fromData(notification)
-    const caseInstance = yield this.Case.findById(notification.case_id)
-    // const caseInstance = this.Case.fromDatabaseModel(yield notification.getDatabaseModel().getCase())
-    yield this.processNotificationWithInstance(notification, caseInstance)
+    const caseObject = yield getCaseByPrimaryKey(notification.case_id)
+    yield this.processNotificationWithInstance(notification, caseObject)
   }
 
   * processNotificationsWithInstance (notifications, caseInstance) {
@@ -79,7 +78,7 @@ class NotificationWorker {
     try {
       let response = {}
 
-      const stateAttestation = makeCaseAttestation(caseInstance.getDataExternal().id, caseInstance.state)
+      const stateAttestation = makeCaseAttestation(convertToExternal(caseInstance).id, caseInstance.state)
       const stateAttestationBuffer = new Buffer(stateAttestation, 'utf8')
 
       this.log.info('attesting state ' + stateAttestation)
@@ -103,7 +102,6 @@ class NotificationWorker {
         retry = false
         throw new Error('Tried to send notification for a case that is not yet finalized')
       }
-
       const result = yield request(notification.notification_target, {
         method: 'put',
         body: response
@@ -121,7 +119,11 @@ class NotificationWorker {
     if (retry) {
       yield this.scheduler.retryNotification(notification)
     } else {
-      yield notification.destroy()
+      const sucessfulNotification = _.merge({}, notification, {
+        is_active: false,
+        state: 'delivered'
+      })
+      yield updateNotification(sucessfulNotification)
     }
   }
 }
