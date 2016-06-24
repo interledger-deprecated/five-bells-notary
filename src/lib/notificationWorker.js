@@ -107,6 +107,8 @@ class NotificationWorker {
         body: response
       })
       if (result.statusCode >= 400) {
+        if (result.statusCode < 500) retry = false
+
         this.log.debug(response)
         throw new Error('Remote error for notification ' + result.statusCode,
           result.body)
