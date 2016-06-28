@@ -26,7 +26,15 @@ deployment:
   production:
     branch: master
     commands:
-      - scripts/ci-publish.sh
+      - cp npmrc-env .npmrc
+      - >
+        if [ -z "$(npm info $(npm ls --depth=-1 2>/dev/null | head -1 | cut -f 1 -d " ") 2>/dev/null)" ]; then
+          if [[ $CIRCLE_BRANCH = "ilp_server_alpha" ]]; then
+            npm publish --tag ilp_server_alpha
+          else
+            bash scripts/ci-publish.sh
+          fi
+        fi
 
 general:
   artifacts:
