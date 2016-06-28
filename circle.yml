@@ -24,7 +24,7 @@ test:
         parallel: true
 deployment:
   production:
-    branch: master
+    branch: [master, ilp_server_alpha]
     commands:
       - cp npmrc-env .npmrc
       - >
