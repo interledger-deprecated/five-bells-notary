@@ -107,7 +107,9 @@ class NotificationWorker {
         body: response
       })
       if (result.statusCode >= 400) {
-        if (result.statusCode < 500) retry = false
+        // 422 may eventually succeed. e.g., Insufficient Funds Error
+        // https://github.com/interledger/five-bells-ledger/blob/258a06e866fd42c231f90ab1fa516ab8d361efca/src/errors/insufficient-funds-error.js
+        if (result.statusCode < 500 && result.statusCode !== 422) retry = false
 
         this.log.debug(response)
         throw new Error('Remote error for notification ' + result.statusCode,

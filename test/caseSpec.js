@@ -260,6 +260,72 @@ describe('Cases', function () {
       yield notificationWorker.processNotificationQueue()
       putNotification2.done()
     })
+
+    it('should NOT retry failed notifications when fulfilling a case -- 404', function * () {
+      const exampleCase = this.cases.other
+      // const executionCondition = conditionHelper.getExecutionCondition(exampleCase)
+      const statusCode = 404
+
+      const putNotification1 = nock('http://ledger.example')
+        .put('/transfers/123/fulfillment')
+        .reply(statusCode)
+
+      yield this.request()
+        .put(exampleCase.id + '/fulfillment')
+        .send(this.exampleFulfillment)
+        .expect(200)
+        .end()
+
+      // put fails
+      yield notificationWorker.processNotificationQueue()
+      putNotification1.done()
+      this.clock.tick(500)
+
+      // Not ready to retry yet (backoff in effect)
+      yield notificationWorker.processNotificationQueue()
+      this.clock.tick(2501)
+      yield notificationWorker.processNotificationQueue()
+      expect(nock.isDone()).to.equal(true)
+    })
+
+    it('should retry failed notifications when fulfilling a case -- 422', function * () {
+      const exampleCase = this.cases.other
+      const executionCondition = conditionHelper.getExecutionCondition(exampleCase)
+      const statusCode = 422
+
+      yield this.request()
+        .put(exampleCase.id + '/fulfillment')
+        .send(this.exampleFulfillment)
+        .expect(200)
+        .end()
+
+      const putNotification1 = nock('http://ledger.example')
+        .put('/transfers/123/fulfillment')
+        .reply(statusCode)
+      const putNotification2 = nock('http://ledger.example')
+        .log(logger('nock').info)
+        .put('/transfers/123/fulfillment', (body) => {
+          expect(cc.validateFulfillment(body, executionCondition)).to.be.true
+
+          return true
+        })
+        .reply(204)
+
+      // put fails
+      yield notificationWorker.processNotificationQueue()
+      putNotification1.done()
+      expect(putNotification2.isDone()).to.equal(false)
+      this.clock.tick(500)
+
+      // Not ready to retry yet (backoff in effect)
+      yield notificationWorker.processNotificationQueue()
+      expect(putNotification2.isDone()).to.equal(false)
+      this.clock.tick(2501)
+
+      // Success
+      yield notificationWorker.processNotificationQueue()
+      putNotification2.done()
+    })
   })
 
   describe('POST /cases/:id/targets', function () {
