@@ -48,6 +48,8 @@ describe('Cases', function () {
 
     this.basicCase = _.cloneDeep(require('./data/basicCase'))
     this.exampleFulfillment = _.cloneDeep(require('./data/exampleFulfillment'))
+
+    this.caseInvalidNotificationTargets = _.cloneDeep(require('./data/caseInvalidNotificationTargets'))
   })
 
   describe('GET /cases/:id', function () {
@@ -83,6 +85,57 @@ describe('Cases', function () {
         .put(this.basicCase.id)
         .send(caseInstance)
         .expect(400)
+        .end()
+    })
+
+    it('should return 400 when the notification_targets are not distinct', function * () {
+      const caseInstance = _.cloneDeep(this.caseInvalidNotificationTargets)
+      yield this.request()
+        .put(caseInstance.id)
+        .send(caseInstance)
+        .expect(400)
+        .end()
+    })
+
+    it('should return 400 when adding additional notification targets that are not distinct', function * () {
+      const caseInstance = _.cloneDeep(this.basicCase)
+
+      const additionalTargets = [caseInstance.notification_targets[0], caseInstance.notification_targets[0]]
+      yield this.request()
+        .put(caseInstance.id)
+        .send(caseInstance)
+        .expect(201)
+        .end()
+
+      yield this.request()
+        .post(caseInstance.id + '/targets')
+        .send(additionalTargets)
+        .expect(400)
+        .end()
+    })
+
+    it('should return a distinct list of notification targets', function * () {
+      const caseInstance = _.cloneDeep(this.basicCase)
+
+      const additionalTargets = caseInstance.notification_targets
+      yield this.request()
+        .put(caseInstance.id)
+        .send(caseInstance)
+        .expect(201)
+        .end()
+
+      yield this.request()
+        .post(caseInstance.id + '/targets')
+        .send(additionalTargets)
+        .expect(200)
+        .end()
+
+      yield this.request()
+        .get(caseInstance.id)
+        .expect(200)
+        .expect(_.assign(caseInstance, {
+          state: 'proposed'
+        }))
         .end()
     })
 

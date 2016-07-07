@@ -20,6 +20,7 @@ const UnmetConditionError = require('five-bells-shared').UnmetConditionError
 const NotFoundError = require('five-bells-shared').NotFoundError
 const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
 const validator = require('../lib/validator')
+const _ = require('lodash')
 
 function convertFromExternal (data) {
   // ID is optional on the incoming side
@@ -130,7 +131,7 @@ function CasesFactory (notificationWorker, caseExpiryMonitor) {
         }
 
         caseInstance.notification_targets =
-          caseInstance.notification_targets.concat(targetUris)
+          _.union(caseInstance.notification_targets, targetUris)
 
         yield db.updateCase(caseInstance, {transaction})
 
