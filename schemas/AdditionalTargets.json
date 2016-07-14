@@ -5,5 +5,6 @@
   "type": "array",
   "items": {
     "$ref": "Iri.json"
-  }
+  },
+  "uniqueItems": true
 }

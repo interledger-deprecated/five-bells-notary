@@ -28,7 +28,8 @@
       "type": "array",
       "items": {
         "$ref": "Iri.json"
-      }
+      },
+      "uniqueItems": true
     },
     "state": {
       "description": "All cases start in the proposed state and are either executed or rejected",
