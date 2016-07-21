@@ -2,19 +2,18 @@
 
 const expect = require('chai').expect
 const appHelper = require('./helpers/app')
-const logHelper = require('five-bells-shared/testHelpers/log')
-const Log = require('../src/lib/log')
+const logHelper = require('./helpers/log')
+const log = require('../src/lib/log')
 
 const Container = require('constitute').Container
 const container = new Container()
-const logger = container.constitute(Log)
 
 beforeEach(function * () {
   appHelper.create(this, container)
 })
 
 describe('Metadata', function () {
-  logHelper(logger)
+  logHelper(log)
 
   describe('GET /', function () {
     it('should return metadata', function * () {
