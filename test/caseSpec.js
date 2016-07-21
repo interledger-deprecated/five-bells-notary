@@ -5,12 +5,12 @@ const nock = require('nock')
 const expect = require('chai').expect
 const sinon = require('sinon')
 const cc = require('five-bells-condition')
-const Log = require('../src/lib/log')
+const log = require('../src/lib/log')
 const persistentCase = require('../src/models/db/case')
 const convertFromExternal = require('../src/models/cases').convertFromExternal
 const appHelper = require('./helpers/app')
 const conditionHelper = require('./helpers/condition')
-const logHelper = require('five-bells-shared/testHelpers/log')
+const logHelper = require('./helpers/log')
 const NotificationWorker = require('../src/lib/notificationWorker')
 const TimerWorker = require('../src/lib/timerWorker')
 
@@ -22,10 +22,9 @@ const dbHelper = require('./helpers/db')
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
 describe('Cases', function () {
-  const logger = container.constitute(Log)
   const notificationWorker = container.constitute(NotificationWorker)
   const timerWorker = container.constitute(TimerWorker)
-  logHelper(logger)
+  logHelper(log)
 
   before(function * () {
     yield dbHelper.init()
@@ -38,6 +37,9 @@ describe('Cases', function () {
   beforeEach(function * () {
     appHelper.create(this, container)
     yield dbHelper.clean()
+
+    const nockLog = log.create('nock')
+    this.nockLogInfo = nockLog.info.bind(nockLog)
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
@@ -263,7 +265,7 @@ describe('Cases', function () {
         .end()
 
       const putNotification = nock('http://ledger.example')
-        .log(logger('nock').info)
+        .log(this.nockLogInfo)
         .put('/transfers/123/fulfillment', (body) => {
           expect(cc.validateFulfillment(body, executionCondition)).to.be.true
 
@@ -290,7 +292,7 @@ describe('Cases', function () {
         .put('/transfers/123/fulfillment')
         .reply(500)
       const putNotification2 = nock('http://ledger.example')
-        .log(logger('nock').info)
+        .log(this.nockLogInfo)
         .put('/transfers/123/fulfillment', (body) => {
           expect(cc.validateFulfillment(body, executionCondition)).to.be.true
 
@@ -356,7 +358,7 @@ describe('Cases', function () {
         .put('/transfers/123/fulfillment')
         .reply(statusCode)
       const putNotification2 = nock('http://ledger.example')
-        .log(logger('nock').info)
+        .log(this.nockLogInfo)
         .put('/transfers/123/fulfillment', (body) => {
           expect(cc.validateFulfillment(body, executionCondition)).to.be.true
 

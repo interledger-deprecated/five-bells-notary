@@ -4,16 +4,16 @@ const moment = require('moment')
 const defer = require('co-defer')
 const TimeQueue = require('./timeQueue')
 const CaseExpiryMonitor = require('./caseExpiryMonitor')
-const Log = require('./log')
+const log = require('./log')
 
 const MAX_32INT = 2147483647
 
 class TimerWorker {
-  static constitute () { return [ TimeQueue, CaseExpiryMonitor, Log ] }
-  constructor (timeQueue, caseExpiryMonitor, log) {
+  static constitute () { return [ TimeQueue, CaseExpiryMonitor ] }
+  constructor (timeQueue, caseExpiryMonitor) {
     this.timeQueue = timeQueue
     this.caseExpiryMonitor = caseExpiryMonitor
-    this.log = log('timerWorker')
+    this.log = log.create('timerWorker')
     this.timeout = null
     this.listener = null
   }

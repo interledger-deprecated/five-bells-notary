@@ -5,7 +5,7 @@ const co = require('co')
 const request = require('co-request')
 const makeCaseAttestation = require('five-bells-shared/utils/makeCaseAttestation')
 const NotificationScheduler = require('five-bells-shared').NotificationScheduler
-const Log = require('./log')
+const log = require('./log')
 const config = require('./config')
 const getCaseByPrimaryKey = require('../models/db/case').getCaseByPrimaryKey
 const updateNotification = require('../models/db/notification').updateNotification
@@ -15,13 +15,13 @@ const notificationDAO = require('../models/db/notification')
 const _ = require('lodash')
 
 class NotificationWorker {
-  static constitute () { return [ Log ] }
-  constructor (log) {
-    this.log = log('notificationWorker')
+  static constitute () { return [] }
+  constructor () {
+    this.log = log.create('notificationWorker')
 
     this.scheduler = new NotificationScheduler({
       notificationDAO,
-      log: log('notificationScheduler'),
+      log: log.create('notificationScheduler'),
       processNotification: this.processNotification.bind(this)
     })
   }

@@ -38,3 +38,7 @@ NOTARY_DB_SYNC=1 NOTARY_DB_URI='oracle://user:password@docker-machine-ip:port/' 
 ```
 
 `NOTARY_DB_SYNC` is a test setting that creates the database by running the SQL scripts in `./src/sql`. These scripts are not re-runnable. You must drop the database or set `NOTARY_DB_SYNC=0` after the initial run.
+
+
+Configuring log level
+ `NOTARY_LOG_LEVEL` (default: `info`) the allowed levels in order of verbosity are `fatal`, `error`, `warn`, `info`, `debug`, and `trace`

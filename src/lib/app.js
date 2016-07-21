@@ -2,12 +2,12 @@
 
 const co = require('co')
 const koa = require('koa')
-const logger = require('koa-mag')
+const logger = require('koa-bunyan-logger')
 const errorHandler = require('five-bells-shared/middlewares/error-handler')
 const Validator = require('five-bells-shared').Validator
 const config = require('./config')
 const Router = require('./router')
-const Log = require('./log')
+const log = require('./log')
 const NotificationWorker = require('./notificationWorker')
 const TimerWorker = require('./timerWorker')
 const createTables = require('./db').createTables
@@ -15,11 +15,11 @@ const readLookupTables = require('./readLookupTables').readLookupTables
 const path = require('path')
 
 module.exports = class App {
-  static constitute () { return [ Router, Validator, Log, NotificationWorker, TimerWorker ] }
-  constructor (router, validator, log, notificationWorker, timerWorker) {
+  static constitute () { return [ Router, Validator, NotificationWorker, TimerWorker ] }
+  constructor (router, validator, notificationWorker, timerWorker) {
     this.router = router
     this.validator = validator
-    this.log = log('app')
+    this.log = log.create('app')
     this.notificationWorker = notificationWorker
     this.timerWorker = timerWorker
 
@@ -32,8 +32,30 @@ module.exports = class App {
     validator.loadSchemasFromDirectory(conditionSchemaPath)
 
     const app = this.app = koa()
-    app.use(logger({mag: log('http')}))
-    app.use(errorHandler({log: log('error-handler')}))
+
+    app.use(logger(this.log))
+    app.use(logger.requestIdContext())
+
+    const isTrace = log.trace()
+    app.use(logger.requestLogger({
+      updateRequestLogFields: function (fields) {
+        return {
+          headers: this.req.headers,
+          body: isTrace ? this.body : undefined,
+          query: this.query
+        }
+      },
+      updateResponseLogFields: function (fields) {
+        return {
+          duration: fields.duration,
+          status: this.status,
+          headers: this.headers,
+          body: isTrace ? this.body : undefined
+        }
+      }
+    }))
+    app.use(errorHandler({log: log.create('error-handler')}))
+    app.on('error', function () {})
 
     router.setupDefaultRoutes()
     router.attach(app)
