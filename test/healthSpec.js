@@ -5,6 +5,7 @@ nock.enableNetConnect(['localhost', '127.0.0.1'])
 const appHelper = require('./helpers/app')
 const logHelper = require('./helpers/log')
 const log = require('../src/lib/log')
+const expect = require('chai').expect
 
 const Container = require('constitute').Container
 const container = new Container()
@@ -21,6 +22,11 @@ describe('Health', function () {
       yield this.request()
         .get('/health')
         .expect(200)
+        .expect((res) => {
+          expect(res.body).to.deep.equal({
+            status: 'OK'
+          })
+        })
         .end()
     })
   })

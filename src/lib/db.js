@@ -85,8 +85,21 @@ function * truncateTables () {
   }
 }
 
+function * isConnected () {
+  const query = knex.client.config.client === 'strong-oracle'
+    ? 'SELECT 1 FROM DUAL' : 'SELECT 1'
+  return knex.raw(query)
+  .then(() => {
+    return true
+  })
+  .catch(() => {
+    return false
+  })
+}
+
 module.exports = {
   createTables,
   dropTables,
-  truncateTables
+  truncateTables,
+  isConnected
 }
