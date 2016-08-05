@@ -16,7 +16,7 @@ function sequence (promises) {
     : promises[0].then(() => sequence(promises.slice(1)))
 }
 
-function executeStatements (sql) {
+function executeStatements (knex, sql) {
   const separator = ';\n'
   const statements = sql.split(separator)
   return sequence(statements.map((statement) => {
@@ -47,31 +47,6 @@ function executeSQLPlus (sqlFilepath) {
   })
 }
 
-function executePSQL (sqlFilepath) {
-  return new Promise((resolve, reject) => {
-    const command = 'psql'
-    const args = [
-      '--quiet',
-      '--username=' + connection.user,
-      '--host=' + connection.host,
-      '--port=' + (connection.port || 5432),
-      '--dbname=' + connection.database,
-      '--file=' + path.resolve(sqlFilepath),
-      '--set=ON_ERROR_STOP=1'
-    ]
-    const env = {
-      PATH: process.env.PATH,
-      PGPASSWORD: connection.password
-    }
-    const childProcess = spawn(command, args, {env})
-    childProcess.on('close', (code) => {
-      return code === 0 ? resolve() : reject(
-        new Error('psql exited with code ' + code))
-    })
-    childProcess.on('error', reject)
-  })
-}
-
 function executeMSSQL (sqlFilepath) {
   return new Promise((resolve, reject) => {
     const command = path.join(__dirname, '../../node_modules/sql-cli/bin/mssql')
@@ -98,29 +73,34 @@ function executeMSSQL (sqlFilepath) {
   })
 }
 
-function executeScript (filename) {
+function createTables () {
   const dbType = knex.client.config.client
   const filepath = path.resolve(
-    __dirname, '..', 'sql', dbType, filename)
+    __dirname, '..', 'sql', dbType, 'create.sql')
 
   if (dbType === 'strong-oracle') {
     return executeSQLPlus(filepath)
-  } else if (dbType === 'pg') {
-    return executePSQL(filepath)
   } else if (dbType === 'mssql') {
     return executeMSSQL(filepath)
   } else {
     const sql = fs.readFileSync(filepath, {encoding: 'utf8'})
-    return executeStatements(sql)
+    return executeStatements(knex, sql)
   }
 }
 
-function createTables () {
-  return executeScript('create.sql')
-}
+function dropTables () {
+  const dbType = knex.client.config.client
+  const filepath = path.resolve(
+    __dirname, '..', 'sql', dbType, 'drop.sql')
 
-function * dropTables () {
-  return executeScript('drop.sql')
+  if (dbType === 'strong-oracle') {
+    return executeSQLPlus(filepath)
+  } else if (dbType === 'mssql') {
+    return executeMSSQL(filepath)
+  } else {
+    const sql = fs.readFileSync(filepath, {encoding: 'utf8'})
+    return executeStatements(knex, sql)
+  }
 }
 
 function * truncateTables () {
