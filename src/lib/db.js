@@ -47,6 +47,32 @@ function executeSQLPlus (sqlFilepath) {
   })
 }
 
+function executeMSSQL (sqlFilepath) {
+  return new Promise((resolve, reject) => {
+    const command = path.join(__dirname, '../../node_modules/sql-cli/bin/mssql')
+    const args = [
+      '--user', connection.user,
+      '--pass', connection.password,
+      '--server', connection.host,
+      '--port', (connection.port || 1433),
+      '--database', connection.database,
+      '--query', '.run ' + path.resolve(sqlFilepath)
+    ]
+    const env = {
+      PATH: process.env.PATH
+    }
+    const childProcess = spawn(command, args, {env})
+    childProcess.stderr.on('data', (data) => {
+      console.error(data.toString('utf-8'))
+    })
+    childProcess.on('close', (code) => {
+      return code === 0 ? resolve() : reject(
+        new Error('mssql exited with code ' + code))
+    })
+    childProcess.on('error', reject)
+  })
+}
+
 function createTables () {
   const dbType = knex.client.config.client
   const filepath = path.resolve(
@@ -54,6 +80,8 @@ function createTables () {
 
   if (dbType === 'strong-oracle') {
     return executeSQLPlus(filepath)
+  } else if (dbType === 'mssql') {
+    return executeMSSQL(filepath)
   } else {
     const sql = fs.readFileSync(filepath, {encoding: 'utf8'})
     return executeStatements(knex, sql)
@@ -67,8 +95,8 @@ function dropTables () {
 
   if (dbType === 'strong-oracle') {
     return executeSQLPlus(filepath)
-  } else if (dbType === 'sqlite3') {
-    return Promise.resolve()
+  } else if (dbType === 'mssql') {
+    return executeMSSQL(filepath)
   } else {
     const sql = fs.readFileSync(filepath, {encoding: 'utf8'})
     return executeStatements(knex, sql)
