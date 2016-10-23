@@ -19,6 +19,9 @@
     "report-coverage": "codecov",
     "ci-npm-publish": "ci-publish"
   },
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "keywords": [
     "consensus",
     "witness",
