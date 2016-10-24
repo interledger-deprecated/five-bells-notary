@@ -13,7 +13,6 @@
     "lint": "eslint src test *.js",
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
     "test": "istanbul test -- _mocha",
-    "test-oracle": "NOTARY_UNIT_DB_URI='oracle://system:oracle@192.168.99.100:1521/' DYLD_LIBRARY_PATH=/opt/oracle/instantclient LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
     "bump": "version-bump",
     "integration": "integration all",
     "report-coverage": "codecov",

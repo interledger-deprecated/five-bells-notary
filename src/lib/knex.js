@@ -33,12 +33,7 @@ function getKnexConfig () {
       client: 'sqlite3',
       useNullAsDefault: true
     },
-    postgres: {client: 'pg'},
-    oracle: {
-      client: 'strong-oracle',
-      useNullAsDefault: true,
-      pool: {min: 0, max: 7}
-    }
+    postgres: {client: 'pg'}
   }
   const uri = config.getIn(['db', 'uri'])
   if (!uri) {

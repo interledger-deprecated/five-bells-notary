@@ -31,14 +31,7 @@ To run with postgres, create a database, then
 NOTARY_DB_SYNC=1 NOTARY_UNIT_DB_URI=postgres://user:password@host:port/db_name npm start
 ```
 
-To run with Oracle, first, install [Oracle Instant Client](http://www.oracle.com/technetwork/database/features/instant-client/index-097480.html), e.g, in /opt/oracle/instantclient. Then run an Oracle database in a docker container ([example](https://github.com/wnameless/docker-oracle-xe-11g)), and specify `NOTARY_DB_URI`:
-
-```
-NOTARY_DB_SYNC=1 NOTARY_DB_URI='oracle://user:password@docker-machine-ip:port/' DYLD_LIBRARY_PATH=/opt/oracle/instantclient LD_LIBRARY_PATH=/opt/oracle/instantclient npm start
-```
-
 `NOTARY_DB_SYNC` is a test setting that creates the database by running the SQL scripts in `./src/sql`. These scripts are not re-runnable. You must drop the database or set `NOTARY_DB_SYNC=0` after the initial run.
-
 
 Configuring log level
  `NOTARY_LOG_LEVEL` (default: `info`) the allowed levels in order of verbosity are `fatal`, `error`, `warn`, `info`, `debug`, and `trace`
