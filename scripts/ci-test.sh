@@ -6,12 +6,6 @@ set -o pipefail
 NODE_INDEX="$1"
 TOTAL_NODES="$2"
 
-# Workaround for
-# https://github.com/tgriesser/knex/commit/72c934a2d107f9ff7864b8b42bb843e31ad4e3bc
-testKnex() {
-  NOTARY_DB_URI="$1" node -e "require('./src/lib/knex'); process.exit()" | if grep -q "Error: Cannot find module";then exit 1;fi
-}
-
 lint() {
   npm run lint
 }
@@ -30,7 +24,6 @@ dockerBuild() {
 
 postgrestest() {
   local dbUri="postgres://ubuntu@localhost/circle_test"
-  testKnex $dbUri
   psql -U ubuntu -c 'DROP DATABASE circle_test;'
   psql -U ubuntu -c 'CREATE DATABASE circle_test;'
   docker run --name=notary-test-postgres -it --net=host \
@@ -40,7 +33,6 @@ postgrestest() {
 
 sqlitetest() {
   local dbUri="sqlite://"
-  testKnex $dbUri
   # Run tests with coverage (SQLite)
   NOTARY_UNIT_DB_URI=$dbUri \
   XUNIT_FILE=coverage/xunit.xml \
@@ -64,7 +56,7 @@ oneNode() {
 
 twoNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest integrationtest;;
+    0) lint; dockerBuild; sqlitetest; integrationtest;;
     1) dockerBuild; postgrestest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -72,7 +64,7 @@ twoNodes() {
 
 threeNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest integrationtest;;
+    0) lint; dockerBuild; sqlitetest; integrationtest;;
     1) dockerBuild; postgrestest;;
     2) dockerBuild; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
