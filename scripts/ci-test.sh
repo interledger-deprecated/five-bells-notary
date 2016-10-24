@@ -26,7 +26,7 @@ apidoc() {
 }
 
 dockerBuild() {
-  docker build -t interledgerjs/five-bells-notary .
+  docker build -t interledger/five-bells-notary .
 }
 
 postgrestest() {
@@ -36,7 +36,7 @@ postgrestest() {
   psql -U ubuntu -c 'CREATE DATABASE circle_test;'
   docker run --name=notary-test-postgres -it --net=host \
     -e NOTARY_UNIT_DB_URI=$dbUri \
-    interledgerjs/five-bells-notary npm test
+    interledger/five-bells-notary npm test
 }
 
 sqlitetest() {
