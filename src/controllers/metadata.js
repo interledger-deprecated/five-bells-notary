@@ -1,12 +1,5 @@
 'use strict'
-
-const metadata = {
-  urls: {
-    health: '/health',
-    case: '/cases/:id',
-    case_fulfillment: '/cases/:id/fulfillment'
-  }
-}
+const config = require('../lib/config')
 
 /**
  * @api {get} / Get the server metadata
@@ -18,4 +11,14 @@ const metadata = {
  *
  * @returns {void}
  */
-exports.getResource = function * () { this.body = metadata }
+exports.getResource = function * () {
+  const base = config.getIn(['server', 'base_uri'])
+
+  this.body = {
+    urls: {
+      health: base + '/health',
+      case: base + '/cases/:id',
+      case_fulfillment: base + '/cases/:id/fulfillment'
+    }
+  }
+}

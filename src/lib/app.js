@@ -2,7 +2,7 @@
 
 const co = require('co')
 const koa = require('koa')
-const logger = require('koa-bunyan-logger')
+const makeLogger = require('koa-riverpig')
 const errorHandler = require('five-bells-shared/middlewares/error-handler')
 const Validator = require('five-bells-shared').Validator
 const config = require('./config')
@@ -33,29 +33,9 @@ module.exports = class App {
 
     const app = this.app = koa()
 
-    app.use(logger(this.log))
-    app.use(logger.requestIdContext())
+    app.use(makeLogger({ logger: log.create('koa') }))
 
-    const isTrace = log.trace()
-    app.use(logger.requestLogger({
-      updateRequestLogFields: function (fields) {
-        return {
-          headers: this.req.headers,
-          body: isTrace ? this.body : undefined,
-          query: this.query
-        }
-      },
-      updateResponseLogFields: function (fields) {
-        return {
-          duration: fields.duration,
-          status: this.status,
-          headers: this.headers,
-          body: isTrace ? this.body : undefined
-        }
-      }
-    }))
     app.use(errorHandler({log: log.create('error-handler')}))
-    app.on('error', function () {})
 
     router.setupDefaultRoutes()
     router.attach(app)

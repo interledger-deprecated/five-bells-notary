@@ -5,13 +5,6 @@ set -o pipefail
 
 NODE_INDEX="$1"
 TOTAL_NODES="$2"
-ORACLE_DIR="$HOME/.oracle"
-
-# Workaround for
-# https://github.com/tgriesser/knex/commit/72c934a2d107f9ff7864b8b42bb843e31ad4e3bc
-testKnex() {
-  NOTARY_DB_URI="$1" node -e "require('./src/lib/knex'); process.exit()" | if grep -q "Error: Cannot find module";then exit 1;fi
-}
 
 lint() {
   npm run lint
@@ -31,7 +24,6 @@ dockerBuild() {
 
 postgrestest() {
   local dbUri="postgres://ubuntu@localhost/circle_test"
-  testKnex $dbUri
   psql -U ubuntu -c 'DROP DATABASE circle_test;'
   psql -U ubuntu -c 'CREATE DATABASE circle_test;'
   docker run --name=notary-test-postgres -it --net=host \
@@ -41,7 +33,6 @@ postgrestest() {
 
 sqlitetest() {
   local dbUri="sqlite://"
-  testKnex $dbUri
   # Run tests with coverage (SQLite)
   NOTARY_UNIT_DB_URI=$dbUri \
   XUNIT_FILE=coverage/xunit.xml \
@@ -54,74 +45,28 @@ sqlitetest() {
   npm run report-coverage
 }
 
-oracletest() {
-  # Install Oracle
-  docker pull wnameless/oracle-xe-11g
-  docker run -d -p 49160:22 -p 1521:1521 wnameless/oracle-xe-11g
-  # Download and unzip Oracle library
-  mkdir -p "$ORACLE_DIR"
-
-  local clientSDK="instantclient-sdk-linux.x64-12.1.0.2.0.zip"
-  local sqlplusZip="instantclient-sqlplus-linux.x64-12.1.0.2.0.zip"
-  if [ ! -f "$ORACLE_DIR/$clientSDK" ]; then
-    (
-    cd "$ORACLE_DIR" || exit 1
-
-    aws s3 cp s3://ilp-server-ci-files/"$clientSDK" .
-    aws s3 cp s3://ilp-server-ci-files/"$sqlplusZip" .
-    aws s3 cp s3://ilp-server-ci-files/instantclient-basic-linux.x64-12.1.0.2.0.zip .
-    unzip $clientSDK
-    unzip $sqlplusZip
-    unzip instantclient-basic-linux.x64-12.1.0.2.0.zip
-    # Need symlinks from .so.12.1 to .so
-    ln -s libocci.so.12.1 instantclient_12_1/libocci.so
-    ln -s libclntsh.so.12.1 instantclient_12_1/libclntsh.so
-    sudo mkdir -p /opt/oracle
-    sudo cp -r instantclient_12_1 /opt/oracle/instantclient
-
-    cd -
-    )
-  fi
-
-  npm i strong-oracle
-  # Check for node_modules/strong-oracle explicitly because even if installation of it fails, npm doesn't catch it.
-  if [[ ! -d node_modules/strong-oracle ]]; then
-    echo 'node_modules/strong-oracle is not there, return error.'
-    exit 1
-  fi
-
-  local dbUri="oracle://system:oracle@localhost:1521/"
-  testKnex $dbUri
-
-  NOTARY_UNIT_DB_URI=$dbUri \
-    LD_LIBRARY_PATH=/opt/oracle/instantclient \
-    npm test
-}
-
-
 oneNode() {
   lint
   dockerBuild
   sqlitetestest
   integrationtest
   postgrestest
-  oracletest
   apidoc
 }
 
 twoNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest integrationtest;;
-    1) dockerBuild; oracletest; postgrestest; apidoc;;
+    0) lint; dockerBuild; sqlitetest; integrationtest;;
+    1) dockerBuild; postgrestest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
 }
 
 threeNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest integrationtest;;
+    0) lint; dockerBuild; sqlitetest; integrationtest;;
     1) dockerBuild; postgrestest;;
-    2) dockerBuild; oracletest; apidoc;;
+    2) dockerBuild; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
 }
@@ -130,8 +75,8 @@ fourNodes() {
   case "$NODE_INDEX" in
     0) dockerBuild; sqlitetest; postgrestest;;
     1) integrationtest;;
-    2) lint; dockerBuild; apidoc;;
-    3) oracletest;;
+    2) lint; dockerBuild;;
+    3) apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
 }

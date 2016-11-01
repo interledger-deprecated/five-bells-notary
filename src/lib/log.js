@@ -1,42 +1,24 @@
 'use strict'
 
-const bunyan = require('bunyan')
-const config = require('./config')
+const riverpig = require('riverpig')
 
-function createLogger (name) {
-  const logger = bunyan.createLogger({
-    name: name,
-    level: config.logLevel,
-    stream: process.stdout
-  })
-  return logger
-}
+const logStream = require('through2')()
+logStream.pipe(process.stdout)
 
-const defaultLogger = createLogger('notary')
-const loggers = [defaultLogger]
-
-function createChildLogger (module) {
-  const logger = defaultLogger.child({
-    module: module
-  })
-  loggers.push(logger)
-  return logger
-}
-
-// For unit testing
-function setOutputStream (outputStream) {
-  loggers.forEach((logger) => {
-    logger.streams = []
-    logger.addStream({
-      type: 'stream',
-      stream: outputStream,
-      level: config.logLevel
-    })
-    logger.currentOutput = outputStream
+const create = (namespace) => {
+  return riverpig(namespace, {
+    stream: logStream
   })
 }
 
-defaultLogger.create = createChildLogger
-defaultLogger.setOutputStream = setOutputStream
-module.exports = defaultLogger
+let outputStream = process.stdout
+const setOutputStream = (newOutputStream) => {
+  logStream.unpipe(outputStream)
+  logStream.pipe(newOutputStream)
+  outputStream = newOutputStream
+}
 
+module.exports = {
+  create,
+  setOutputStream
+}

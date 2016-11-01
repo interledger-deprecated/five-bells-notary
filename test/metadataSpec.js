@@ -23,9 +23,9 @@ describe('Metadata', function () {
         .expect(function (res) {
           expect(res.body).to.deep.equal({
             urls: {
-              health: '/health',
-              case: '/cases/:id',
-              case_fulfillment: '/cases/:id/fulfillment'
+              health: 'http://localhost/health',
+              case: 'http://localhost/cases/:id',
+              case_fulfillment: 'http://localhost/cases/:id/fulfillment'
             }
           })
         })
