@@ -29,7 +29,7 @@
     "payment"
   ],
   "author": "Stefan Thomas <justmoon@members.fsf.org>",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "co": "^4.6.0",
     "co-body": "^4.0.0",
