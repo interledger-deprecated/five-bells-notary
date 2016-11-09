@@ -6,7 +6,7 @@ const logStream = require('through2')()
 logStream.pipe(process.stdout)
 
 const create = (namespace) => {
-  return riverpig(namespace, {
+  return riverpig('notary:' + namespace, {
     stream: logStream
   })
 }
