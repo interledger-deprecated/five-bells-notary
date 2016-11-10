@@ -43,7 +43,7 @@ module.exports = class App {
 
   start () {
     co(this._start.bind(this)).catch((err) => {
-      this.log.critical(err.stack)
+      this.log.error(err.stack)
     })
   }
 
