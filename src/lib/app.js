@@ -24,12 +24,9 @@ module.exports = class App {
     this.timerWorker = timerWorker
 
     const notarySchemaPath = path.join(__dirname, '/../../schemas')
-    const conditionSchemaPath =
-      path.resolve(path.dirname(require.resolve('five-bells-condition')), 'schemas')
 
     validator.loadSharedSchemas()
     validator.loadSchemasFromDirectory(notarySchemaPath)
-    validator.loadSchemasFromDirectory(conditionSchemaPath)
 
     const app = this.app = koa()
 
