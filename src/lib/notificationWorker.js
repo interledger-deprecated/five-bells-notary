@@ -83,7 +83,7 @@ class NotificationWorker {
 
       this.log.info('attesting state ' + stateAttestation)
 
-      const signatureCondition = new cc.Ed25519()
+      const signatureCondition = new cc.Ed25519Sha256()
       signatureCondition.sign(stateAttestationBuffer, new Buffer(config.getIn(['keys', 'ed25519', 'secret']), 'base64'))
 
       const notaryCondition = new cc.PrefixSha256()

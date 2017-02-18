@@ -5,7 +5,7 @@ const config = require('../../src/lib/config')
 const makeCaseAttestation = require('five-bells-shared/utils/makeCaseAttestation')
 
 const getKeyCondition = exports.getKeyCondition = () => {
-  const keyCondition = new cc.Ed25519()
+  const keyCondition = new cc.Ed25519Sha256()
   keyCondition.setPublicKey(new Buffer(config.getIn(['keys', 'ed25519', 'public']), 'base64'))
   return keyCondition.getConditionUri()
 }

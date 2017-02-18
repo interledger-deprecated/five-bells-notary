@@ -1,6 +1,6 @@
 {
   "id": "http://localhost/cases/75159fb1-8ed2-4c92-9af7-0f48e2616f47",
-  "execution_condition": "cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7",
+  "execution_condition": "ni:///sha-256;vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI?fpt=preimage-sha-256&cost=7",
   "expires_at": "2015-11-19T20:27:12.299Z",
   "notaries": [
     "http://localhost"
