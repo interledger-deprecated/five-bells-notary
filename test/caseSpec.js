@@ -243,13 +243,13 @@ describe('Cases', function () {
 
       const response = yield this.request()
         .put(exampleCase.id + '/fulfillment')
-        .send('cf:0:ZXhlY2V0ZQ')
+        .send('oAmAB2V4ZWNldGU')
         .expect(422)
         .end()
 
       const errorString = 'Invalid fulfillment: Error: Fulfillment does not match condition' +
-                          ' (expected: cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7, ' +
-                          'actual: cc:0:3:nN793Gop06qyPccAIOCG_ROgIs5QghfQVU6fumRgyZ0:7)'
+                          ' (expected: ni:///sha-256;vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI?fpt=preimage-sha-256&cost=7, ' +
+                          'actual: ni:///sha-256;nN793Gop06qyPccAIOCG_ROgIs5QghfQVU6fumRgyZ0?fpt=preimage-sha-256&cost=7)'
       expect(response.body.id).to.equal('UnmetConditionError')
       expect(response.body.message).to.equal(errorString)
     })
