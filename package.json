@@ -32,7 +32,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "co": "^4.6.0",
-    "co-body": "^4.0.0",
+    "co-body": "^5.0.0",
     "co-defer": "^1.0.0",
     "co-emitter": "^0.2.3",
     "co-map": "^1.1.0",
